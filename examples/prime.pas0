@@ -1,0 +1,25 @@
+(*
+ * Naive prime number test in Pascal 0
+ * Pedro Vasconcelos, 2022
+ *)
+Program PrimeNumberTest;
+Function is_prime(n: integer): Boolean;
+Var d : integer;
+Begin
+  d := 2;
+  While d<n do
+     Begin
+        if n mod d=0 then Break;
+        d := d + 1
+     End;
+  is_prime := (n>1) and (d=n)
+end;
+Var i : integer;
+Begin
+   i := readInt();
+   writeInt(i);
+   If is_prime(i) then
+      writeStr(' is prime')
+   Else 
+      writeStr(' is NOT prime')
+End.

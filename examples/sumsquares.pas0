@@ -1,0 +1,14 @@
+(* Compute the sum of squares from 1 to 10. *)
+program SumSquares;
+var s : integer;
+    n : integer;
+begin
+  s := 0;
+  n := 1;
+  while n <= 10 do
+    begin
+       s := s + n*n;
+       n := n + 1
+    end;
+  writeint(n)
+end.

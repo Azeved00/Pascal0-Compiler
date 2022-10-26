@@ -1,0 +1,17 @@
+(* Build and print a table of 
+ * the first 20 Fibonnacci numbers in Pascal-0
+ * Pedro Vasconcelos, 2022
+ *)
+program Fibonnacci;
+const n = 20;
+var
+   fib : array[0..n] of integer;
+   i   : integer; 
+begin
+   fib[0] := 0;
+   fib[1] := 1;
+   for i := 2 to n do
+      fib[i] := fib[i-1]+fib[i-2];
+   for i := 0 to n do
+      writeint(fib[i])
+end.

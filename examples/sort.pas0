@@ -1,0 +1,56 @@
+(*
+ * Recursive QuickSort in Pascal-0
+ *
+ * Pedro Vasconcelos, 2022
+ *)
+program QuickSort;
+
+const N = 10; (* Size of array to sort *)
+
+function partition(vec : array[1..N] of integer;
+                   l   : integer;
+                   u   : integer): integer;
+var i : integer; m : integer; temp : integer;
+begin
+   m := l;
+   for i := l+1 to u do
+      if(vec[i] < vec[l]) then
+      begin
+         m := m + 1;
+         temp := vec[i];
+         vec[i] := vec[m];
+         vec[m] := temp
+      end;
+   temp := vec[l];
+   vec[l] := vec[m];
+   vec[m]:= temp;
+   partition := m
+end;              
+
+
+procedure qsort_rec(vec : array[1..N] of integer;
+                    l   : integer;
+                    u   : integer);
+var m : integer;
+begin
+   if l<u then
+      begin
+         m := partition(vec, l, u);
+         qsort_rec(vec, l, m-1);
+         qsort_rec(vec, m+1, u)
+      end
+end;
+
+var
+   arr : array[1..N] of integer;
+   i   : integer;
+
+begin
+   for i := 1 to N do
+      arr[i] := readint();
+      
+   qsort_rec(arr, 1, N);
+   
+   for i := 1 to N do
+      writeint(arr[i])
+end.

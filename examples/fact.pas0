@@ -1,0 +1,12 @@
+(* Compute factorial of 10 recursively. *)
+program RecursiveFactorial;
+function fact(n: integer): integer;
+begin
+  if n>0 then 
+     fact := n*fact(n-1)
+  else
+     fact := 1
+end;
+begin
+  writeint(fact(10))
+end.
