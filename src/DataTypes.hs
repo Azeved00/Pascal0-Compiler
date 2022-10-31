@@ -1,48 +1,52 @@
 --Define the grammar for Pascal-0
 module DataTypes where
 
-data AritOp = PLUS
-           | MINUS
-           | MULT
-           | DIV
-           | MOD
-           deriving(Eq, Show)
-
-data BoolOp = GREATER
-            | LESS
-            | GEQUAL
-            | LEQUAL
-            | NOTEQAL
-            | EQUAL
-            | AND
-            | OR
-            | NOT
-            deriving(Eq, Show)
+data Op = PLUS
+        | MINUS
+        | MULT
+        | DIV
+        | MOD
+        | GREAT
+        | LESS
+        | GEQUAL
+        | LEQUAL
+        | DIFF
+        | EQUAL
+        | AND
+        | OR
+        | NOT
+        | UMINUS
+        deriving(Eq, Show)
 
 data BasicType = INTEGER
-               | BOOLEAN  
+               | BOOLEAN
                | DOUBLE
                | STRING
-               | ARRAY
                deriving(Eq, Show)
 
 data Token = IF
+           | THEN
            | BREAK
-           | IDENT String 
+           | ASSIGN
+           | IDENT String
            | TYPE BasicType
            | NUM Int
            | REAL Double
            | STR String
            | BOOL Bool
-           | CONST 
-           | VAR 
+           | ARRAY
+           | CONST
+           | VAR
            | ELSE
-           | BOOLOP BoolOp
-           | ARITOP AritOp
+           | OP Op
+           | COMMA
            | SEMICOLON
            | DDOT
            | DOT
-           | ASSIGN
+           | LBRACKET
+           | RBRACKET
+           | LPARENT
+           | RPARENT
            | WHILE
            | DO
            | BEGIN
@@ -54,4 +58,3 @@ data Token = IF
            | FUNCTION
            | PROCEDURE
           deriving (Eq,Show)
-
