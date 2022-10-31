@@ -11,9 +11,9 @@ $alpha = [a-zA-Z_]		-- alphabetic characters
 tokens :-
 $white+;
 
-"/*" (~[\*])* (\*)+ ( (~[\/\*]) (~[\*])* "*"+ )* "/";
+"(*" (~[\*])* (\*)+ ( (~\)\*]) (~[\*])* "*"+ )* ")";
 \;                                              { \_ -> SEMICOLON }
-\:												                      { \_ -> DDOT}
+\:											    { \_ -> DDOT}
 \:=                                             { \_ -> ASSIGN }
 \.                                              { \_ -> DOT }
 \,                                              { \_ -> COMMA }
@@ -43,12 +43,12 @@ program                                         { \_ -> PROGRAM }
 function                                        { \_ -> FUNCTION }
 procedure                                       { \_ -> PROCEDURE }
 
-if												                      { \_ -> IF }
+if												{ \_ -> IF }
 then                                            { \_ -> THEN }
-break											                      { \_ -> BREAK}
+break											{ \_ -> BREAK}
 else                                            { \_ -> ELSE }
 while                                           { \_ -> WHILE }
-do												                      { \_ -> DO }
+do												{ \_ -> DO }
 begin                                           { \_ -> BEGIN }
 end                                             { \_ -> END }
 for                                             { \_ -> FOR }
