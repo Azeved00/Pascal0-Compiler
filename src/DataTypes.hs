@@ -15,7 +15,6 @@ data Op = PLUS
         | AND
         | OR
         | NOT
-        | UMINUS
         deriving(Eq, Show)
 
 data BasicType = INTEGER
