@@ -10,6 +10,8 @@ $alpha = [a-zA-Z_]		-- alphabetic characters
 
 tokens :-
 $white+;
+
+"/*" (~[\*])* (\*)+ ( (~[\/\*]) (~[\*])* "*"+ )* "/";
 \;                                              { \_ -> SEMICOLON }
 \:												{ \_ -> DDOT}
 \:=                                             { \_ -> ASSIGN }
