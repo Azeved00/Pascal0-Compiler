@@ -2,7 +2,6 @@
 -- Analisador sintático para a calculadora simples
 module Parser where
 import Lexer
-import DataTypes
 }
 
 %name parse

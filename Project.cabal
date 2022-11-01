@@ -18,7 +18,7 @@ cabal-version:       >=1.10
 
 executable Trabalho
   main-is:             Main.hs
-  other-modules:       DataTypes, Lexer
+  other-modules:       Lexer, Parser
   -- other-extensions:
   build-tools:         alex, happy
   build-depends:      base >=4.13 && <4.14, array
