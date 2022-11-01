@@ -64,6 +64,7 @@ function { FUNCTION }
 %left not
 %%
 
+-- Programs
 Program : ProgramHeader ProgramBody '.'                                { Program $1 $2 }
 
 ProgramHeader : program id ';'                                         { Header $2 }
@@ -74,7 +75,7 @@ ProcDecls : Proc ProcDecls                                             { Compoun
           | {- empty -}                                                { EmptyProc }
 
 
-
+-- Procedures and Functions
 Proc : ProcHeader ProcBody ';'                                         { Proc $1 $2 }
 
 ProcHeader : procedure id '(' ParamList ')' ';'                        { Procedure $2 $4 }
@@ -91,7 +92,7 @@ ParamList1 : Param ';' ParamList1                                      { Compoun
 Param : id ':' Type                                                    { Parameter $1 $3 }
 
 
-
+-- Declarations
 ConstDecls : const ConstDefSeq                                         { $2 }
            | {- empty -}                                               { EmptyConst }
 
@@ -119,7 +120,7 @@ Constant : num                                                         { Num $1 
          | id                                                          { Id $1 }
 
 
-
+-- Statements
 StmList : Stm ';' StmList                       { CompoundStm $1 $3 }
         | Stm                                   { $1 }
 
@@ -153,7 +154,7 @@ ProcStm : id '(' ExpList ')'                    { ProcStm $1 $3 }
 CompoundStm : begin StmList end                 { $2 }
 
 
-
+-- Expressions
 ExpList : ExpList1              { $1 }
         | {- empty -}           { EmptyExp }
 
@@ -183,6 +184,7 @@ Exp   : Exp '+' Exp             { BinOp PLUS $1 $3 }
       | num                     { Num $1 }
       | bool                    { Bool $1 }
       | VarAcess                { $1 }
+
 {
 type Ident = String
 
