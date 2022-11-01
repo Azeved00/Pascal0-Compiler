@@ -36,6 +36,7 @@ not { OP NOT }
 ':=' { ASSIGN }
 '.' { DOT }
 ':' { DDOT }
+',' { COMMA }
 if { IF }
 then { THEN }
 else { ELSE }
@@ -70,10 +71,10 @@ ProgramHeader : program id ';'                                         { Header 
 
 ProgramBody : ConstDecls ProcDecls VarDecls CompoundStm                { Body $1 $2 $3 $4}
 
-
-
 ProcDecls : Proc ProcDecls                                             { CompoundProc $1 $2 }
           | {- empty -}                                                { EmptyProc }
+
+
 
 Proc : ProcHeader ProcBody ';'                                         { Proc $1 $2 }
 
@@ -89,6 +90,8 @@ ParamList1 : Param ';' ParamList1                                      { Compoun
            | Param                                                     { $1 }
 
 Param : id ':' Type                                                    { Parameter $1 $3 }
+
+
 
 ConstDecls : const ConstDefSeq                                         { $2 }
            | {- empty -}                                               { EmptyConst }
@@ -130,7 +133,7 @@ Stm : AssignStm                                 { $1 }
     | CompoundStm                               { $1 }
     | {- empty -}                               { EmptyStm }
 
-AssignStm : id ':=' Exp                         { AssignStm $1 $3 }
+AssignStm : VarAcess ':=' Exp                         { AssignStm $1 $3 }
 
 IfStm : CloseIf                                 { $1 }
       | OpenIf                                  { $1 }
@@ -155,8 +158,11 @@ CompoundStm : begin StmList end                 { $2 }
 ExpList : ExpList1              { $1 }
         | {- empty -}           { EmptyExp }
 
-ExpList1 : Exp ';' ExpList1     { CompoundExp $1 $3 }
+ExpList1 : Exp ',' ExpList1     { CompoundExp $1 $3 }
          | Exp                  { $1 }
+
+VarAcess : id                   { Id $1 }
+         | id '[' Exp ']'       { Array $1 $3 }
 
 Exp   : Exp '+' Exp             { BinOp PLUS $1 $3 }
       | Exp '-' Exp             { BinOp MINUS $1 $3 }
@@ -173,11 +179,11 @@ Exp   : Exp '+' Exp             { BinOp PLUS $1 $3 }
       | Exp or Exp              { BinOp OR $1 $3 }
       | not Exp                 { UnOp NOT $2 }
       | '-' Exp %prec not       { UnOp MINUS $2 }
+      | '(' Exp ')'             { $2 }
       | id '(' ExpList ')'      { Func $1 $3 }
-      | id '[' Exp ']'          { Array $1 $3 }
       | num                     { Num $1 }
-      | id                      { Id $1 }
       | bool                    { Bool $1 }
+      | VarAcess                { $1 }
 {
 type Ident = String
 
@@ -194,7 +200,7 @@ data ProgHeader = Header Ident
 data ProgBody = Body Const Proc Var Stm
               deriving Show
 
-data Stm = AssignStm Ident Exp
+data Stm = AssignStm Exp Exp
          | IfStm Exp Stm
          | IfElseStm Exp Stm Stm
          | WhileStm Exp Stm
@@ -246,5 +252,5 @@ data ProcBody = ProcBody Var Stm
 
 
 parseError :: [Token] -> a
-parseError toks = error "parse error"
+parseError toks = error ("parse error" ++ (show (head toks)) ++ " " ++ show (length toks))
 }
