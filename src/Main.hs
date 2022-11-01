@@ -1,9 +1,10 @@
 module Main where
 import Lexer
+import Parser
 import Data.Char
 --alexScanTokens :: String -> [Tokens]
 
 
 main = do
     txt <- getContents
-    print (alexScanTokens (map toLower txt))
+    print (parse $ alexScanTokens (map toLower txt))
