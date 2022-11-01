@@ -13,6 +13,7 @@ import Lexer
 id { IDENT $$ }
 num { NUM $$ }
 bool { BOOL $$ }
+str { STR $$ }
 '+' { OP PLUS }
 '-' { OP MINUS }
 '*' { OP MULT }
@@ -67,7 +68,7 @@ function { FUNCTION }
 -- Programs
 Program : ProgramHeader ProgramBody '.'                                { Program $1 $2 }
 
-ProgramHeader : program id ';'                                         { Header $2 }
+ProgramHeader : program id ';'                                         { $2 }
 
 ProgramBody : ConstDecls ProcDecls VarDecls CompoundStm                { Body $1 $2 $3 $4}
 
@@ -183,20 +184,16 @@ Exp   : Exp '+' Exp             { BinOp PLUS $1 $3 }
       | id '(' ExpList ')'      { Func $1 $3 }
       | num                     { Num $1 }
       | bool                    { Bool $1 }
+      | str                     { Str $1 }
       | VarAcess                { $1 }
 
 {
-type Ident = String
-
 data Type = TyBasic BasicType
           | TyArray BasicType Exp Exp
           deriving Show
 
-data Prog = Program ProgHeader ProgBody
+data Prog = Program String ProgBody
           deriving Show
-
-data ProgHeader = Header Ident
-                deriving Show
 
 data ProgBody = Body Const Proc Var Stm
               deriving Show
@@ -207,29 +204,30 @@ data Stm = AssignStm Exp Exp
          | WhileStm Exp Stm
          | ForStm Stm Exp Stm
          | BreakStm
-         | ProcStm Ident Exp
+         | ProcStm String Exp
          | CompoundStm Stm Stm
          | EmptyStm
          deriving Show
 
 data Exp = Num Int
-         | Id Ident
+         | Id String
          | Bool Bool
+         | Str String
          | BinOp Op Exp Exp
          | UnOp Op Exp
-         | Array Ident Exp
-         | Func Ident Exp
+         | Array String Exp
+         | Func String Exp
          | CompoundExp Exp Exp
          | EmptyExp
          deriving Show
 
 data Const = CompoundConst Const Const
-           | Const Ident Int
+           | Const String Int
            | EmptyConst
            deriving Show
 
 data Var = CompoundVar Var Var
-         | Var Ident Type
+         | Var String Type
          | EmptyVar
          deriving Show
 
@@ -238,12 +236,12 @@ data Proc = Proc ProcHeader ProcBody
           | EmptyProc
           deriving Show
 
-data ProcHeader = Procedure Ident Param
-                | Function Ident Param Type
+data ProcHeader = Procedure String Param
+                | Function String Param Type
                 deriving Show
 
 data Param = CompoundParam Param Param
-           | Parameter Ident Type
+           | Parameter String Type
            | EmptyParam
            deriving Show
 
