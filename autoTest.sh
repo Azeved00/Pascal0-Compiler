@@ -8,7 +8,7 @@ draw () {
         then
             ((lvl+=1))
             printf '\n'
-            printf "%0.s    " $(seq 1 $lvl)
+            printf "%0.s|   " $(seq 1 $lvl)
         elif [[ ${1:c-1:1} == ')' ]]
         then 
             ((lvl-=1))
