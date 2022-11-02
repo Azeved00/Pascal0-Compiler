@@ -28,7 +28,15 @@ cabal build
 export rootFolder=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
 echo "-------------TESTING-------------"
-for testFolder in $rootFolder/tests/*; do
+local par="*"
+if [ -z "$1" ]
+    then
+        par="*"
+    else
+        par=$1
+fi
+
+for testFolder in $rootFolder/tests/$par; do
     if [[ -f $testFolder ]]; 
         then continue 
     fi
