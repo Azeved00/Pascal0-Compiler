@@ -1,5 +1,27 @@
 #!/bin/bash
 
+draw () {
+    local lvl=0
+    #echo $1;
+    for c in $(seq 1 ${#1}); do
+        if [[ ${1:c-1:1} == '(' ]] 
+        then
+            ((lvl+=1))
+            printf '\n'
+            printf "%0.s    " $(seq 1 $lvl)
+        elif [[ ${1:c-1:1} == ')' ]]
+        then 
+            ((lvl-=1))
+        elif [[ ${1:c-1:1} == ' ' ]]
+        then
+            printf ' '
+        else 
+            printf '%c' ${1:c-1:1}
+        fi
+    done
+    printf "\n---------------------------------\n"
+}
+
 echo "-------------BUILDING------------"
 cabal build
 
@@ -14,8 +36,9 @@ for testFolder in $rootFolder/tests/*; do
     echo "TEST: $testFolder"
     if [[ -f $testFile/output.txt ]]
     then cat $testFolder/input.pas0 | cabal run -v0 | diff - $testFile/output.txt
-    else cat $testFolder/input.pas0 | cabal run -v0
+    else 
+        res=$(cat $testFolder/input.pas0 | cabal run -v0)
+        draw "$res"
     fi
-    echo "---------------------------------"
 done
 
