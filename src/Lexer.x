@@ -6,11 +6,12 @@ module Lexer where
 
 $digit = 0-9			-- digits
 $alpha = [a-zA-Z_]		-- alphabetic characters
+$all = [\x00-\x10ffff]  -- all characters
 
 tokens :-
 $white+;
 
-"(*" (~[\*])* (\*)+ ( (~[\)\*]) (~[\*])* "*"+ )* ")";
+\(\* ($all # [\*])* \*+ ( ($all # [\)]) ($all # [\*])* \*+ )* \) ;
 \;                                              { \_ -> SEMICOLON }
 \:											    { \_ -> DDOT}
 \:=                                             { \_ -> ASSIGN }
