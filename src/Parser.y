@@ -63,6 +63,8 @@ function { FUNCTION }
 %left '+' '-' or
 %left '*' div mod and
 %left not
+%left if
+%left else
 %%
 
 -- Programs
@@ -134,15 +136,11 @@ Stm : AssignStm                                 { $1 }
     | CompoundStm                               { $1 }
     | {- empty -}                               { EmptyStm }
 
-AssignStm : VarAcess ':=' Exp                         { AssignStm $1 $3 }
+AssignStm : VarAcess ':=' Exp                   { AssignStm $1 $3 }
 
-IfStm : CloseIf                                 { $1 }
-      | OpenIf                                  { $1 }
+IfStm : if Exp then Stm                         { IfStm $2 $4 }
+      | if Exp then Stm else Stm                { IfElseStm $2 $4 $6 }
 
-OpenIf : if Exp then Stm                         { IfStm $2 $4 }
-       | if Exp then CloseIf else OpenIf         { IfElseStm $2 $4 $6 }
-
-CloseIf : if Exp then CloseIf else CloseIf       { IfElseStm $2 $4 $6 }
 
 WhileStm : while Exp do Stm                     { WhileStm $2 $4 }
 
