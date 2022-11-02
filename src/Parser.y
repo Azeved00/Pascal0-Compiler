@@ -251,5 +251,5 @@ data ProcBody = ProcBody Var Stm
 
 
 parseError :: [Token] -> a
-parseError toks = error ("parse error" ++ (show (head toks)) ++ " " ++ show (length toks))
+parseError toks = error ("parse error" ++ (show (head toks)) ++ " " ++ show (take 10 toks) ++ " " ++ show (length toks))
 }
