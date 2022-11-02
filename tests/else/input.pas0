@@ -1,5 +1,5 @@
 (* The dangling else thing *)
-program else;
+program delse;
 var s : integer;
     n : integer;
     z : integer;
@@ -7,6 +7,6 @@ begin
   s := 0;
   n := 1;
   if n>0 then
-    if s>0 then z := s else z := 1
+    if s>0 then z := s else z := 1;
   writeint(z)
 end.
