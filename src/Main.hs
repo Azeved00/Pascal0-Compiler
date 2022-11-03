@@ -1,6 +1,7 @@
 module Main where
 import Lexer
 import Parser
+import TypeCheck
 import Data.Char
 --alexScanTokens :: String -> [Tokens]
 

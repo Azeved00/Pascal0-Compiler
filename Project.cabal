@@ -18,9 +18,9 @@ cabal-version:       >=1.10
 
 executable Trabalho
   main-is:             Main.hs
-  other-modules:       Lexer, Parser
+  other-modules:       Lexer, Parser, TypeCheck
   -- other-extensions:
   build-tools:         alex, happy
-  build-depends:      base >=4.13 && <4.14, array
+  build-depends:      base >=4.13 && <4.14, containers, array
   hs-source-dirs: src
   default-language:    Haskell2010
