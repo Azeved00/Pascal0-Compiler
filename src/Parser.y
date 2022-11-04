@@ -134,7 +134,6 @@ Stm : AssignStm                                 { $1 }
     | BreakStm                                  { $1 }
     | ProcStm                                   { $1 }
     | CompoundStm                               { $1 }
-    | {- empty -}                               { EmptyStm }
 
 AssignStm : VarAcess ':=' Exp                   { AssignStm $1 $3 }
 
@@ -204,7 +203,6 @@ data Stm = AssignStm Exp Exp
          | BreakStm
          | ProcStm String Exp
          | CompoundStm Stm Stm
-         | EmptyStm
          deriving Show
 
 data Exp = Num Int
