@@ -1,7 +1,7 @@
 {
--- Analisador sintático para a calculadora simples
 module Parser where
-import Lexer
+
+import DataTypes
 }
 
 %name parse
@@ -10,52 +10,51 @@ import Lexer
 
 %token
 
-id { IDENT $$ }
-num { NUM $$ }
-bool { BOOL $$ }
-str { STR $$ }
-'+' { OP PLUS }
-'-' { OP MINUS }
-'*' { OP MULT }
-div { OP DIV }
-mod { OP MOD }
-'>' { OP GREAT }
-'<' { OP LESS }
-'>=' { OP GEQUAL }
-'<=' { OP LEQUAL }
-'<>' { OP DIFF }
-'=' { OP EQUAL }
-and { OP AND }
-or { OP OR }
-not { OP NOT }
-'(' { LPARENT }
-')' { RPARENT }
-';' { SEMICOLON }
-'[' { LBRACKET }
-']' { RBRACKET }
-':=' { ASSIGN }
-'.' { DOT }
-':' { DDOT }
-',' { COMMA }
-if { IF }
-then { THEN }
-else { ELSE }
-while { WHILE }
-do { DO }
-for { FOR }
-to { TO }
-break { BREAK }
-begin { BEGIN }
-end { END }
-const { CONST }
-var { VAR }
-type { TYPE $$ }
-array { ARRAY }
-of { OF }
+id      { IDENT $$ }
+num     { NUM $$ }
+bool    { BOOL $$ }
+str     { STR $$ }
+'+'     { OP PLUS }
+'-'     { OP MINUS }
+'*'     { OP MULT }
+div     { OP DIV }
+mod     { OP MOD }
+'>'     { OP GREAT }
+'<'     { OP LESS }
+'>='    { OP GEQUAL }
+'<='    { OP LEQUAL }
+'<>'    { OP DIFF }
+'='     { OP EQUAL }
+and     { OP AND }
+or      { OP OR }
+not     { OP NOT }
+'('     { LPARENT }
+')'     { RPARENT }
+';'     { SEMICOLON }
+'['     { LBRACKET }
+']'     { RBRACKET }
+':='    { ASSIGN }
+'.'     { DOT }
+':'     { DDOT }
+','     { COMMA }
+if      { IF }
+then    { THEN }
+else    { ELSE }
+while   { WHILE }
+do      { DO }
+for     { FOR }
+to      { TO }
+break   { BREAK }
+begin   { BEGIN }
+end     { END }
+const   { CONST }
+var     { VAR }
+type    { TYPE $$ }
+array   { ARRAY }
+of      { OF }
 program { PROGRAM }
 procedure { PROCEDURE }
 function { FUNCTION }
-
 
 
 %right then
@@ -65,6 +64,7 @@ function { FUNCTION }
 %left not
 %left if
 %left else
+
 %%
 
 -- Programs
@@ -185,67 +185,6 @@ Exp   : Exp '+' Exp             { BinOp PLUS $1 $3 }
       | VarAcess                { $1 }
 
 {
-data Type = TyBasic BasicType
-          | TyArray BasicType Exp Exp
-          deriving Show
-
-data Prog = Program String ProgBody
-          deriving Show
-
-data ProgBody = Body Const Proc Var Stm
-              deriving Show
-
-data Stm = AssignStm Exp Exp
-         | IfStm Exp Stm
-         | IfElseStm Exp Stm Stm
-         | WhileStm Exp Stm
-         | ForStm Stm Exp Stm
-         | BreakStm
-         | ProcStm String Exp
-         | CompoundStm Stm Stm
-         deriving Show
-
-data Exp = Num Int
-         | Id String
-         | Bool Bool
-         | Str String
-         | BinOp Op Exp Exp
-         | UnOp Op Exp
-         | Array String Exp
-         | Func String Exp
-         | CompoundExp Exp Exp
-         | EmptyExp
-         deriving Show
-
-data Const = CompoundConst Const Const
-           | Const String Int
-           | EmptyConst
-           deriving Show
-
-data Var = CompoundVar Var Var
-         | Var String Type
-         | EmptyVar
-         deriving Show
-
-data Proc = Proc ProcHeader ProcBody
-          | CompoundProc Proc Proc
-          | EmptyProc
-          deriving Show
-
-data ProcHeader = Procedure String Param
-                | Function String Param Type
-                deriving Show
-
-data Param = CompoundParam Param Param
-           | Parameter String Type
-           | EmptyParam
-           deriving Show
-
-data ProcBody = ProcBody Var Stm
-              deriving Show
-
-
-
 parseError :: [Token] -> a
 parseError toks = error ("parse error" ++ (show (head toks)) ++ " " ++ show (take 10 toks) ++ " " ++ show (length toks))
 }

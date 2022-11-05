@@ -1,5 +1,6 @@
 {
 module Lexer where
+import DataTypes
 }
 
 %wrapper "basic"
@@ -61,71 +62,15 @@ array                                           { \_ -> ARRAY}
 integer                                         { \_ -> TYPE INTEGER  }
 boolean                                         { \_ -> TYPE BOOLEAN }
 string                                          { \_ -> TYPE STRING }
-double                                          { \_ -> TYPE DOUBLE }
+-- double                                          { \_ -> TYPE DOUBLE }
 
 true                                            { \_ -> BOOL True }
 false                                           { \_ -> BOOL False }
 $alpha($alpha|$digit)*                          { \s -> IDENT s }
 $digit+                                         { \s -> NUM (read s) }
-$digit+"."$digit+                               { \s -> REAL (read s) }
+-- $digit+"."$digit+                               { \s -> REAL (read s) }
 \'.*\'                                          { \s -> STR s }
 
 {
 
-data Op = PLUS
-        | MINUS
-        | MULT
-        | DIV
-        | MOD
-        | GREAT
-        | LESS
-        | GEQUAL
-        | LEQUAL
-        | DIFF
-        | EQUAL
-        | AND
-        | OR
-        | NOT
-        deriving(Eq, Show)
-
-data BasicType = INTEGER
-               | BOOLEAN
-               | DOUBLE
-               | STRING
-               deriving(Eq, Show)
-
-data Token = IF
-           | THEN
-           | BREAK
-           | ASSIGN
-           | IDENT String
-           | TYPE BasicType
-           | NUM Int
-           | REAL Double
-           | STR String
-           | BOOL Bool
-           | ARRAY
-           | CONST
-           | VAR
-           | ELSE
-           | OP Op
-           | COMMA
-           | SEMICOLON
-           | DDOT
-           | DOT
-           | LBRACKET
-           | RBRACKET
-           | LPARENT
-           | RPARENT
-           | WHILE
-           | DO
-           | BEGIN
-           | END
-           | FOR
-           | TO
-           | OF
-           | PROGRAM
-           | FUNCTION
-           | PROCEDURE
-          deriving (Eq,Show)
 }

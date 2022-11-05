@@ -1,4 +1,5 @@
 module Main where
+import DataTypes
 import Lexer
 import Parser
 import TypeCheck

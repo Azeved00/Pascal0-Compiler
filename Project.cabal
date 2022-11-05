@@ -18,7 +18,11 @@ cabal-version:       >=1.10
 
 executable Trabalho
   main-is:             Main.hs
-  other-modules:       Lexer, Parser, TypeCheck
+  other-modules:       
+    Lexer, 
+    Parser, 
+    TypeCheck,
+    DataTypes
   -- other-extensions:
   build-tools:         alex, happy
   build-depends:      base >=4.12 && <4.14, containers, array

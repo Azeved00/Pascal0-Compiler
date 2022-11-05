@@ -1,0 +1,121 @@
+module DataTypes where
+
+
+-- Lexer data types
+data Op = PLUS
+        | MINUS
+        | MULT
+        | DIV
+        | MOD
+        | GREAT
+        | LESS
+        | GEQUAL
+        | LEQUAL
+        | DIFF
+        | EQUAL
+        | AND
+        | OR
+        | NOT
+        deriving(Eq, Show)
+
+data BasicType = INTEGER
+               | BOOLEAN  
+               | STRING
+               deriving(Eq, Show)
+
+data Token  = IF
+            | THEN
+            | BREAK
+            | ASSIGN
+            | IDENT String
+            | TYPE BasicType
+            | NUM Int
+            | REAL Double
+            | STR String
+            | BOOL Bool
+            | ARRAY
+            | CONST
+            | VAR
+            | ELSE
+            | OP Op
+            | COMMA
+            | SEMICOLON
+            | DDOT
+            | DOT
+            | LBRACKET
+            | RBRACKET
+            | LPARENT
+            | RPARENT
+            | WHILE
+            | DO
+            | BEGIN
+            | END
+            | FOR
+            | TO
+            | OF
+            | PROGRAM
+            | FUNCTION
+            | PROCEDURE
+            deriving (Eq,Show)
+
+-- Parser Data Types
+data Type = TyBasic BasicType
+          | TyArray BasicType Exp Exp
+          deriving Show
+
+data Prog = Program String ProgBody
+          deriving Show
+
+data ProgBody = Body Const Proc Var Stm
+              deriving Show
+
+data Stm = AssignStm Exp Exp
+         | IfStm Exp Stm
+         | IfElseStm Exp Stm Stm
+         | WhileStm Exp Stm
+         | ForStm Stm Exp Stm
+         | BreakStm
+         | ProcStm String Exp
+         | CompoundStm Stm Stm
+         | EmptyStm
+         deriving Show
+
+data Exp = Num Int
+         | Id String
+         | Bool Bool
+         | Str String
+         | BinOp Op Exp Exp
+         | UnOp Op Exp
+         | Array String Exp
+         | Func String Exp
+         | CompoundExp Exp Exp
+         | EmptyExp
+         deriving Show
+
+data Const = CompoundConst Const Const
+           | Const String Int
+           | EmptyConst
+           deriving Show
+
+data Var = CompoundVar Var Var
+         | Var String Type
+         | EmptyVar
+         deriving Show
+
+data Proc = Proc ProcHeader ProcBody
+          | CompoundProc Proc Proc
+          | EmptyProc
+          deriving Show
+
+data ProcHeader = Procedure String Param
+                | Function String Param Type
+                deriving Show
+
+data Param = CompoundParam Param Param
+           | Parameter String Type
+           | EmptyParam
+           deriving Show
+
+data ProcBody = ProcBody Var Stm
+              deriving Show
+

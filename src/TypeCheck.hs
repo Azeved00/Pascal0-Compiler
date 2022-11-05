@@ -1,10 +1,9 @@
 {-# LANGUAGE MultiWayIf #-}
 module TypeCheck where
 
+import DataTypes
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Lexer
-import Parser
 
 type Env = Map String Type
 type EnvProc = Map String [Type]
