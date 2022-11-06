@@ -9,4 +9,5 @@ import Data.Char
 
 main = do
     txt <- getContents
-    print (parse $ alexScanTokens (map toLower txt))
+    print (parse $ alexScanTokens $ map toLower txt )
+    print (checkProg $ parse $ alexScanTokens $ map toLower txt ) 

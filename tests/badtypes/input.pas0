@@ -1,0 +1,6 @@
+(* BAD typing *)
+program delse;
+var s : boolean;
+begin
+  s := 1
+end.
