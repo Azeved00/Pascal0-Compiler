@@ -99,22 +99,22 @@ checkParam env envp (CompoundExp e1 e2) (t1:t2) = (checkType (checkExp env envp 
 checkStm :: Env -> EnvProc -> Int -> Stm -> Bool
 checkStm env envp 0 (BreakStm) = tcError ("wrong usage of break statment") ""
 checkStm env envp _ (BreakStm) = True
-checkStm env envp _ (CompoundStm stm1 stm2) = checkStm env envp lvl stm1 && checkStm env envp lvl stm2
-checkStm env envp _ (AssignStm (Id id) exp) = if
+checkStm env envp lvl (CompoundStm stm1 stm2) = checkStm env envp lvl stm1 && checkStm env envp lvl stm2
+checkStm env envp lvl (AssignStm (Id id) exp) = if
         | checkType (checkExp env envp exp) typ -> True
         | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
         where typ = findEnv env id
-checkStm env envp _ (AssignStm (Array id _) exp) = if
+checkStm env envp lvl (AssignStm (Array id _) exp) = if
         | checkType (checkExp env envp exp) typ -> True
         | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
         where typ = findEnv env id
-checkStm env envp _ (IfStm cond stm) = if
+checkStm env envp lvl (IfStm cond stm) = if
         | tycond && check -> True
         | otherwise -> tcError "If Stm"
                 ("Condition: " ++ show tycond ++ " Statement: " ++ show check)
         where tycond = checkType (checkExp env envp cond) (TyBasic BOOLEAN)
               check = checkStm env envp lvl stm
-checkStm env envp _ (IfElseStm cond stm1 stm2) = if
+checkStm env envp lvl (IfElseStm cond stm1 stm2) = if
         | tycond && check1 && check2 -> True
         | otherwise -> tcError "If Then Else Stm"
                 ("Condition: " ++ show tycond ++ " Statement 1: " ++ show check1 ++ " statement 2: " ++ show check2)
@@ -133,7 +133,7 @@ checkStm env envp lvl (ForStm stm1 cond stm2) = if
         where tycond = checkType (checkExp env envp cond) (TyBasic INTEGER)
               check1 = checkStm env envp (lvl+1) stm1
               check2 = checkStm env envp (lvl+1) stm2
-checkStm env envp _ (ProcStm name exp) = if
+checkStm env envp lvl (ProcStm name exp) = if
         | checkParam env envp exp typ -> True
         | otherwise -> tcError "Parameters were incorrect for procedure" name
         where (typ,_) = findProc envp name
