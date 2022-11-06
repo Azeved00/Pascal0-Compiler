@@ -40,7 +40,7 @@ paramType env (CompoundParam p1 p2) = (e2,t1++t2)
 --checkProgram
 checkProg :: Prog -> Bool
 checkProg (Program _ (Body c p v s)) =
-    checkStm env' envp' s
+    checkStm env' envp' 0 s
     where env  = constDef Map.empty c
           envp = foldr (\(s,t,r) m -> Map.insert s (t,r) m) Map.empty preludeProc
           envp' = checkProc env envp p
@@ -70,7 +70,7 @@ procDef env envp (Function s p t) = (env'', envp')
 
 --check body
 checkBody :: Env -> EnvProc -> ProcBody -> Bool
-checkBody env envp (ProcBody v s) = checkStm env' envp s
+checkBody env envp (ProcBody v s) = checkStm env' envp 0 s
                                     where env' = varDef env v
 -- define var
 varDef :: Env -> Var -> Env
@@ -96,43 +96,44 @@ checkParam env envp (CompoundExp e1 e2) (t1:t2) = (checkType (checkExp env envp 
                                                   && (checkParam env envp e2 t2)
 
 -- Check Statment
-checkStm :: Env -> EnvProc -> Stm -> Bool
-checkStm env envp (BreakStm) = True
-checkStm env envp (CompoundStm stm1 stm2) = checkStm env envp stm1 && checkStm env envp stm2
-checkStm env envp (AssignStm (Id id) exp) = if
+checkStm :: Env -> EnvProc -> Int -> Stm -> Bool
+checkStm env envp 0 (BreakStm) = tcError ("wrong usage of break statment") ""
+checkStm env envp _ (BreakStm) = True
+checkStm env envp _ (CompoundStm stm1 stm2) = checkStm env envp lvl stm1 && checkStm env envp lvl stm2
+checkStm env envp _ (AssignStm (Id id) exp) = if
         | checkType (checkExp env envp exp) typ -> True
         | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
         where typ = findEnv env id
-checkStm env envp (AssignStm (Array id _) exp) = if
+checkStm env envp _ (AssignStm (Array id _) exp) = if
         | checkType (checkExp env envp exp) typ -> True
         | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
         where typ = findEnv env id
-checkStm env envp (IfStm cond stm) = if
+checkStm env envp _ (IfStm cond stm) = if
         | tycond && check -> True
         | otherwise -> tcError "If Stm"
                 ("Condition: " ++ show tycond ++ " Statement: " ++ show check)
         where tycond = checkType (checkExp env envp cond) (TyBasic BOOLEAN)
-              check = checkStm env envp stm
-checkStm env envp (IfElseStm cond stm1 stm2) = if
+              check = checkStm env envp lvl stm
+checkStm env envp _ (IfElseStm cond stm1 stm2) = if
         | tycond && check1 && check2 -> True
         | otherwise -> tcError "If Then Else Stm"
                 ("Condition: " ++ show tycond ++ " Statement 1: " ++ show check1 ++ " statement 2: " ++ show check2)
         where tycond = checkType (checkExp env envp cond) (TyBasic BOOLEAN)
-              check1 = checkStm env envp stm1
-              check2 = checkStm env envp stm2
-checkStm env envp (WhileStm cond stm) = if
+              check1 = checkStm env envp lvl stm1
+              check2 = checkStm env envp lvl stm2
+checkStm env envp lvl (WhileStm cond stm) = if
         | tycond && check -> True
         | otherwise -> tcError "While" ("Condition: " ++ show tycond ++ " Statement: " ++ show check)
         where tycond = checkType (checkExp env envp cond) (TyBasic BOOLEAN)
-              check = checkStm env envp stm
-checkStm env envp (ForStm stm1 cond stm2) = if
+              check = checkStm env envp (lvl+1) stm
+checkStm env envp lvl (ForStm stm1 cond stm2) = if
         | tycond && check1 && check2 -> True
         | otherwise -> tcError "For"
                 ("Statement 1: " ++ show check1 ++ " Condition: " ++ show tycond ++ " statement 2: " ++ show check2)
         where tycond = checkType (checkExp env envp cond) (TyBasic INTEGER)
-              check1 = checkStm env envp stm1
-              check2 = checkStm env envp stm2
-checkStm env envp (ProcStm name exp) = if
+              check1 = checkStm env envp (lvl+1) stm1
+              check2 = checkStm env envp (lvl+1) stm2
+checkStm env envp _ (ProcStm name exp) = if
         | checkParam env envp exp typ -> True
         | otherwise -> tcError "Parameters were incorrect for procedure" name
         where (typ,_) = findProc envp name
