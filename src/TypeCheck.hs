@@ -99,10 +99,14 @@ checkParam env envp (CompoundExp e1 e2) (t1:t2) = (checkType (checkExp env envp 
 checkStm :: Env -> EnvProc -> Stm -> Bool
 checkStm env envp (BreakStm) = True
 checkStm env envp (CompoundStm stm1 stm2) = checkStm env envp stm1 && checkStm env envp stm2
-checkStm env envp (AssignStm e1 e2) = if
-        | checkType (checkExp env envp e1) typ -> True
-        | otherwise -> tcError ("error assigning " ++ (show e2) ++ " to" ++ (show e1)) ""
-        where typ = (checkExp env envp e2)
+checkStm env envp (AssignStm (Id id) exp) = if
+        | checkType (checkExp env envp exp) typ -> True
+        | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
+        where typ = findEnv env id
+checkStm env envp (AssignStm (Array id _) exp) = if
+        | checkType (checkExp env envp exp) typ -> True
+        | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
+        where typ = findEnv env id
 checkStm env envp (IfStm cond stm) = if
         | tycond && check -> True
         | otherwise -> tcError "If Stm"
