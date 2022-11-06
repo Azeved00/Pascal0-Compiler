@@ -8,6 +8,21 @@ import qualified Data.Map as Map
 type Env = Map String Type
 type EnvProc = Map String [Type]
 
+-- helper functions
+tcError :: String -> String -> a
+tcError m s = error ("Type Error: " ++ m ++ " " ++ s)
+
+findEnv :: Env -> String -> Type
+findEnv e s = case Map.lookup s e of
+                 Just t -> t 
+                 Nothing -> tcError "couldn't find type of" s
+
+findProc :: EnvProc -> String -> [Type]
+findProc e s = case Map.lookup s e of
+                Just t -> t
+                Nothing -> tcError "Couldn't find parameter types for " s
+
+--checkProgram
 checkProg :: Prog -> Bool
 checkProg (Program _ pbody) = checkProgBody pbody
 
@@ -103,18 +118,48 @@ checkStm env envp (ProcStm name exp) = case Map.lookup name envp of
 checkStm env envp (CompoundStm stm1 stm2) = checkStm env envp stm1 && checkStm env envp stm2
 
 
-
+-- Check Expt
 checkExp :: Env -> EnvProc -> Exp -> Type
 checkExp _ _ (Num _)  = TyBasic INTEGER
 checkExp _ _ (Bool _) = TyBasic BOOLEAN
-checkExp _ _ (Str _)  = TyBasic STRING
---checkExp e (Id x)   = e ! x
---checkExp e (BinOp o e1 e2) = case o of
---    PLUS -> if
---        | t1 == INTEGER && t2 == INTEGER -> tyBasic INTEGER
---        | otherwise -> error
-
--- do what t1 and t2 is
--- do other operations
--- maybe find better sintax 
-
+checkExp _ _ (Str _)     = TyBasic STRING
+checkExp e _ (Id x)      = findEnv e x
+checkExp ev ep (Array x e) = if
+    | checkType (checkExp ev ep e) (TyBasic INTEGER) -> findEnv ev x
+    | otherwise -> tcError "Incorrect Array Access" x
+checkExp e p (UnOp o e1) = 
+    let t = checkExp e p e1 
+    in if
+        | o == MINUS -> if
+            | checkType t int -> int
+            | otherwise -> tcError "Wrong Type for operation" (show o)
+        | o == NOT -> if
+            | checkType t bool -> bool
+            | otherwise -> tcError "Wrong Type for operation" (show o)
+        | otherwise -> tcError "Operation is not Unary" (show o)
+        where int = TyBasic INTEGER
+              bool = TyBasic BOOLEAN
+checkExp e p (BinOp o e1 e2) = 
+    let t1 = checkExp e p e1 
+        t2 = checkExp e p e1 
+    in if
+        | elem o [PLUS, MINUS, MULT, DIV, MOD] -> if
+            | checkType t1 int && checkType t2 int -> TyBasic INTEGER
+            | otherwise ->  tcError "Wrong Type for operation" (show o)
+        | elem o [GREAT, LESS, GEQUAL, LEQUAL, DIFF, EQUAL] -> if
+            | checkType t1 int && checkType t2 int -> TyBasic BOOLEAN
+            | otherwise -> tcError "Wrong Type for operation" (show o)
+        | elem o [AND, OR] -> if
+            | checkType t1 bool && checkType t1 bool -> bool
+            | otherwise -> tcError "Wrong Type for operation" (show o)
+        | otherwise -> tcError "Operation is not Binary" (show o)
+        where int = TyBasic INTEGER
+              bool = TyBasic BOOLEAN
+checkExp ev ep (Func i p) = 
+    let types = findProc ep i
+        retType = head types
+        parType = tail types
+    in if
+        | checkParam ev ep p parType -> retType 
+        | otherwise -> tcError "parameters are not the same for" i 
+        
