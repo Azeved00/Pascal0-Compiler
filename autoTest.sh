@@ -2,21 +2,30 @@
 
 draw () {
     local lvl=0
-    #echo $1;
-    for c in $(seq 1 ${#1}); do
-        if [[ ${1:c-1:1} == '(' ]] 
+    local ne=1
+    esc=${1@Q}
+
+    for c in $(seq 1 ${#esc}); do
+        if [[ ${esc:c+$ne:1} == '(' ]] 
         then
             ((lvl+=1))
             printf '\n'
             printf "%0.s|   " $(seq 1 $lvl)
-        elif [[ ${1:c-1:1} == ')' ]]
+        elif [[ ${esc:c+$ne:1} == ')' ]]
         then 
             ((lvl-=1))
-        elif [[ ${1:c-1:1} == ' ' ]]
+        elif [[ ${esc:c+$ne:1} == ' ' ]]
         then
             printf ' '
+        elif [[ ${esc:c+$ne:1} == '\' && ${esc:c+$ne+1:1} == 'n' ]]
+        then
+            printf '\n'
+            ((ne+=1))
+        elif [[ $((c+ne +1)) == ${#esc}  ]]
+        then
+            break
         else 
-            printf '%c' ${1:c-1:1}
+            printf '%c' ${esc:c+$ne:1}
         fi
     done
     printf "\n---------------------------------\n"
