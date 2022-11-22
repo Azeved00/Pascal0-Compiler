@@ -19,7 +19,7 @@ data Op = PLUS
         deriving(Eq, Show)
 
 data BasicType = INTEGER
-               | BOOLEAN  
+               | BOOLEAN
                | STRING
                deriving(Eq, Show)
 
@@ -76,7 +76,7 @@ data Stm = AssignStm Exp Exp
          | ForStm Stm Exp Stm
          | BreakStm
          | ProcStm String Exp
-         | CompoundStm Stm Stm
+         | CompoundStm [Stm]
          | EmptyStm
          deriving Show
 
@@ -88,34 +88,28 @@ data Exp = Num Int
          | UnOp Op Exp
          | Array String Exp
          | Func String Exp
-         | CompoundExp Exp Exp
-         | EmptyExp
+         | CompoundExp [Exp]
          deriving Show
 
-data Const = CompoundConst Const Const
+data Const = CompoundConst [Const]
            | Const String Int
-           | EmptyConst
            deriving Show
 
-data Var = CompoundVar Var Var
+data Var = CompoundVar [Var]
          | Var String Type
-         | EmptyVar
          deriving Show
 
 data Proc = Proc ProcHeader ProcBody
-          | CompoundProc Proc Proc
-          | EmptyProc
+          | CompoundProc [Proc]
           deriving Show
 
 data ProcHeader = Procedure String Param
                 | Function String Param Type
                 deriving Show
 
-data Param = CompoundParam Param Param
+data Param = CompoundParam [Param]
            | Parameter String Type
-           | EmptyParam
            deriving Show
 
 data ProcBody = ProcBody Var Stm
               deriving Show
-
