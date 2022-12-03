@@ -113,3 +113,19 @@ data Param = CompoundParam [Param]
 
 data ProcBody = ProcBody Var Stm
               deriving Show
+
+-- Intermadiate Code
+
+type Temp = String
+type Label = String
+type Id = String
+
+data Instr = MOVE Temp Temp
+           | MOVEI Temp Int
+           | OPER Binop Temp Temp Temp
+           | OPERI Binop Temp Temp Int
+           | LABEL Label
+           | JUMP Label
+           | COND Exp Label Label
+           | CALL Temp Id [Temp]
+           | RETURN Temp
