@@ -85,7 +85,9 @@ data Exp = Num Int
          | Bool Bool
          | Str String
          | BinOp Op Exp Exp
+         | RelOp Op Exp Exp
          | UnOp Op Exp
+         | And Exp Exp
          | Array String Exp
          | Func String Exp
          | CompoundExp [Exp]
@@ -129,3 +131,4 @@ data Instr = MOVE Temp Temp
            | COND Exp Label Label
            | CALL Temp Id [Temp]
            | RETURN Temp
+           deriving Show

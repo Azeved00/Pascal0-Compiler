@@ -167,12 +167,12 @@ Exp   : Exp '+' Exp             { BinOp PLUS $1 $3 }
       | Exp '*' Exp             { BinOp MULT $1 $3 }
       | Exp div Exp             { BinOp DIV $1 $3 }
       | Exp mod Exp             { BinOp MOD $1 $3 }
-      | Exp '>' Exp             { BinOp GREAT $1 $3 }
-      | Exp '<' Exp             { BinOp LESS $1 $3 }
-      | Exp '>=' Exp            { BinOp GEQUAL $1 $3 }
-      | Exp '<=' Exp            { BinOp LEQUAL $1 $3 }
-      | Exp '<>' Exp            { BinOp DIFF $1 $3 }
-      | Exp '=' Exp             { BinOp EQUAL $1 $3 }
+      | Exp '>' Exp             { RelOp GREAT $1 $3 }
+      | Exp '<' Exp             { RelOp LESS $1 $3 }
+      | Exp '>=' Exp            { RelOp GEQUAL $1 $3 }
+      | Exp '<=' Exp            { RelOp LEQUAL $1 $3 }
+      | Exp '<>' Exp            { RelOp DIFF $1 $3 }
+      | Exp '=' Exp             { RelOp EQUAL $1 $3 }
       | Exp and Exp             { BinOp AND $1 $3 }
       | Exp or Exp              { BinOp OR $1 $3 }
       | not Exp                 { UnOp NOT $2 }
