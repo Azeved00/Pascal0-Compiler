@@ -122,8 +122,8 @@ type Id = String
 
 data Instr = MOVE Temp Temp
            | MOVEI Temp Int
-           | OPER Binop Temp Temp Temp
-           | OPERI Binop Temp Temp Int
+           | OPER Op Temp Temp Temp
+           | OPERI Op Temp Temp Int
            | LABEL Label
            | JUMP Label
            | COND Exp Label Label

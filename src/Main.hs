@@ -8,6 +8,5 @@ import TypeCheck
 
 main = do
     txt <- getContents
-    putStrLn $ show $ alexScanTokens txt
     putStrLn $ show $ parse $ alexScanTokens txt
     putStrLn $ show $ checkProg $ parse $ alexScanTokens txt
