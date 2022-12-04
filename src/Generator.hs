@@ -47,7 +47,7 @@ transExps expr tab = (transExp expr tab temp, [temp])
 
 
 
-transStm :: Stm -> Table -> Instr
+transStm :: Stm -> Table -> [Instr]
 transStm (AssignStm (Id s) e) tab = transExp e tab dest
                                   where (Just dest) = Map.lookup s tab
 
