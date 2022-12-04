@@ -3,17 +3,32 @@
 draw () {
     local lvl=0
     local ne=1
+    local inList=0
     esc=${1@Q}
 
     for c in $(seq 1 ${#esc}); do
-        if [[ ${esc:c+$ne:1} == '(' ]] 
+        if [[ ${esc:c+$ne:1} == '('  ]] 
         then
             ((lvl+=1))
+            printf '\n'
+            printf "%0.s|   " $(seq 1 $lvl)
+        elif [[ ${esc:c+$ne:1} == '[' ]] 
+        then
+            ((lvl+=1))
+            ((inList+=1))
+            printf '\n'
+            printf "%0.s|   " $(seq 1 $lvl)
+        elif [[ $inList > 0 && ${esc:c+$ne:1} == ',' ]]
+        then
             printf '\n'
             printf "%0.s|   " $(seq 1 $lvl)
         elif [[ ${esc:c+$ne:1} == ')' ]]
         then 
             ((lvl-=1))
+        elif [[ ${esc:c+$ne:1} == ']' ]]
+        then 
+            ((lvl-=1))
+            ((inList-=1))
         elif [[ ${esc:c+$ne:1} == ' ' ]]
         then
             printf ' '
