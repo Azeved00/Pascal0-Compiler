@@ -1,0 +1,5 @@
+program novar;
+begin
+  while 0=0 do
+    break
+end.

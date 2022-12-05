@@ -7,7 +7,7 @@ import qualified Data.Map as Map
 
 generate :: Prog -> [Instr]
 generate (Program _ (Body _ _ _ prog)) = list
-                                       where list = evalState (transStm Map.empty prog) (0,0)
+                                       where list = evalState (transStm Map.empty "" prog) (0,0)
 
 ------------------------auxiliar functions---------------------------------
 type Count = (Int,Int)
@@ -68,33 +68,49 @@ transExps tab args = worker args
            return (code++code', temp:temps)
 
 ----------------------------Trans Stm ----------------------------------------
-transStm :: Table -> Stm -> State Count [Instr]
-transStm tab (AssignStm (Id s) e) = case Map.lookup s tab of
+transStm :: Table -> Label -> Stm -> State Count [Instr]
+transStm tab _ (AssignStm (Id s) e) = case Map.lookup s tab of
     Nothing -> error "Undefined variable"
     Just dest -> do temp <- newTemp
                     code <- transExp tab e temp
                     return (code ++ [MOVE dest temp])
 
-transStm tab (CompoundStm stms)  = do
-  list <- mapM (transStm tab) stms
+transStm tab blabel (CompoundStm stms)  = do
+  list <- mapM (transStm tab blabel) stms
   return (concat list)
 
-transStm tab (IfElseStm expr s1 s2) =
+transStm tab blabel (IfElseStm expr s1 s2) =
     do  l1 <- newLabel
         l2 <- newLabel
         l3 <- newLabel
         code1 <- transCond tab expr l1 l2
-        code2 <- transStm tab s1
-        code3 <- transStm tab s2
+        code2 <- transStm tab blabel s1
+        code3 <- transStm tab blabel s2
         return (code1 ++ [LABEL l1] ++ code2 ++ [LABEL l3] ++ [LABEL l2] ++ code3 ++ [LABEL l3])
-transStm tab (WhileStm expr stm) =
+
+transStm tab blabel (WhileStm expr stm) =
     do  l1 <- newLabel
         l2 <- newLabel
         l3 <- newLabel
         code1 <- transCond tab expr l1 l2
-        code2 <- transStm tab stm
+        code2 <- transStm tab l3 stm
         return ([LABEL l1] ++ code1 ++ [LABEL l2] ++ code2
                                ++ [JUMP l1, LABEL l3])
+
+transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s tab of
+       Nothing -> error "invalid variable"
+       Just temp -> do t1 <- newTemp
+                       t2 <- newTemp
+                       code1 <- transExp tab e t1
+                       code2 <- transExp tab expr t2
+                       l1 <- newLabel
+                       l2 <- newLabel
+                       l3 <- newLabel
+                       code3 <- transStm tab l3 stm
+                       return ([LABEL l1] ++ code1 ++ code2 ++ [COND t1 LESS t2 l2 l3, LABEL l2]
+                               ++ code3 ++ [OPERI PLUS t1 t1 1, JUMP l1, LABEL l3])
+
+transStm tab blabel (BreakStm) = do return [JUMP blabel]
 
 -------------------------- Translate Condition ------------------------
 transCond :: Table -> Exp -> Label -> Label -> State Count [Instr]
@@ -111,13 +127,13 @@ transCond tab (BinOp OR c1 c2) lt lf = do
     code1 <- transCond tab c1 lt l2
     code2 <- transCond tab c2 lt lf
     return (code1 ++ [LABEL l2] ++ code2)
-transCond tab (BinOp relop e1 e2) lt lf = do
+transCond tab (RelOp relop e1 e2) lt lf = do
     t1 <- newTemp
     t2 <- newTemp
     code1 <- transExp tab e1 t1
     code2 <- transExp tab e2 t2
-    return (code1 ++ code2 ++ [COND (BinOp relop e1 e2) lt lf])
+    return (code1 ++ code2 ++ [COND t1 relop t2 lt lf])
 transCond tab expr lt lf = do
     t <- newTemp
     code <- transExp tab expr t
-    return ( code ++ [COND (BinOp DIFF (Id t) (Num 0)) lt lf])
+    return ( code ++ [CONDI t DIFF 0 lt lf])

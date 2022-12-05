@@ -58,7 +58,7 @@ data Token  = IF
             | PROCEDURE
             deriving (Eq,Show)
 
--- Parser Data Types
+-- Parser Data Type
 data Type = TyBasic BasicType
           | TyArray BasicType Exp Exp
           deriving Show
@@ -66,7 +66,7 @@ data Type = TyBasic BasicType
 data Prog = Program String ProgBody
           deriving Show
 
-data ProgBody = Body Const Proc Var Stm
+data ProgBody = Body [Const] [Proc] [Var] Stm
               deriving Show
 
 data Stm = AssignStm Exp Exp
@@ -87,40 +87,29 @@ data Exp = Num Int
          | BinOp Op Exp Exp
          | RelOp Op Exp Exp
          | UnOp Op Exp
-         | And Exp Exp
          | Array String Exp
          | Func String Exp
          | CompoundExp [Exp]
          deriving Show
 
-data Const = CompoundConst [Const]
-           | Const String Int
-           deriving Show
+type Const = (String, Int)
 
-data Var = CompoundVar [Var]
-         | Var String Type
-         deriving Show
+type Var = (String, Type)
 
-data Proc = Proc ProcHeader ProcBody
-          | CompoundProc [Proc]
-          deriving Show
+type Proc = (ProcHeader, ProcBody)
 
-data ProcHeader = Procedure String Param
-                | Function String Param Type
+data ProcHeader = Procedure String [Param]
+                | Function String [Param] Type
                 deriving Show
 
-data Param = CompoundParam [Param]
-           | Parameter String Type
-           deriving Show
+type Param = (Id, Type)
 
-data ProcBody = ProcBody Var Stm
-              deriving Show
+type ProcBody = ([Var], Stm)
 
 -- Intermadiate Code
-
+type Id = String
 type Temp = String
 type Label = String
-type Id = String
 
 data Instr = MOVE Temp Temp
            | MOVEI Temp Int
@@ -128,7 +117,8 @@ data Instr = MOVE Temp Temp
            | OPERI Op Temp Temp Int
            | LABEL Label
            | JUMP Label
-           | COND Exp Label Label
+           | COND Temp Op Temp Label Label
+           | CONDI Temp Op Int Label Label
            | CALL Temp Id [Temp]
            | RETURN Temp
            deriving Show

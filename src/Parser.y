@@ -72,42 +72,42 @@ Program : ProgramHeader ProgramBody '.'                                { Program
 
 ProgramHeader : program id ';'                                         { $2 }
 
-ProgramBody : ConstDecls ProcDecls VarDecls CompoundStm                { Body $1 (CompoundProc $2) $3 $4}
+ProgramBody : ConstDecls ProcDecls VarDecls CompoundStm                { Body $1 $2 $3 $4}
 
 ProcDecls : Proc ProcDecls                                             { $1 : $2 }
           | {- empty -}                                                { [] }
 
 
 -- Procedures and Functions
-Proc : ProcHeader ProcBody ';'                                         { Proc $1 $2 }
+Proc : ProcHeader ProcBody ';'                                         { ($1, $2) }
 
 ProcHeader : procedure id '(' ParamList ')' ';'                        { Procedure $2 $4 }
            | function id '(' ParamList ')' ':' BasicType ';'           { Function $2 $4 (TyBasic $7) }
 
-ParamList : ParamList1                                                 { CompoundParam $1 }
-          | {- empty -}                                                { CompoundParam [] }
+ParamList : ParamList1                                                 { $1 }
+          | {- empty -}                                                { [] }
 
-ProcBody : VarDecls CompoundStm                                        { ProcBody $1 $2 }
+ProcBody : VarDecls CompoundStm                                        { ($1, $2) }
 
 ParamList1 : Param ';' ParamList1                                      { $1 : $3 }
            | Param                                                     { [$1] }
 
-Param : id ':' Type                                                    { Parameter $1 $3 }
+Param : id ':' Type                                                    { ($1, $3) }
 
 
 -- Declarations
-ConstDecls : const ConstDefSeq                                         { CompoundConst $2 }
-           | {- empty -}                                               { CompoundConst [] }
+ConstDecls : const ConstDefSeq                                         { $2 }
+           | {- empty -}                                               { [] }
 
-VarDecls : var VarDefSeq                                               { CompoundVar $2 }
-         | {- empty -}                                                 { CompoundVar [] }
+VarDecls : var VarDefSeq                                               { $2 }
+         | {- empty -}                                                 { [] }
 
-ConstDef : id '=' num ';'                                              { Const $1 $3 }
+ConstDef : id '=' num ';'                                              { ($1, $3) }
 
 ConstDefSeq : ConstDef ConstDefSeq                                     { $1 : $2 }
             | ConstDef                                                 { [$1] }
 
-VarDef : id ':' Type ';'                                               { Var $1 $3 }
+VarDef : id ':' Type ';'                                               { ($1, $3) }
 
 VarDefSeq : VarDef VarDefSeq                                           { $1 : $2 }
           | VarDef                                                     { [$1] }

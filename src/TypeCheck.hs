@@ -32,13 +32,13 @@ checkType (TyArray t1 _ _) (TyBasic t2) = t1 == t2
 
 paramType :: Env -> [Param] -> (Env,[Type])
 paramType env [] = (env, [])
-paramType env (Parameter s t : p) = (e2,t1++t2)
+paramType env ((s, t) : p) = (e2,t1++t2)
                           where (e1,t1) = (Map.insert s t env,[t])
                                 (e2,t2) = paramType e1 p
 
 --checkProgram
 checkProg :: Prog -> Bool
-checkProg (Program _ (Body (CompoundConst c) (CompoundProc p) (CompoundVar v) s)) =
+checkProg (Program _ (Body c p v s)) =
     checkStm env' envp' 0 s
     where env  = constDef Map.empty c
           envp = foldr (\(s,t,r) m -> Map.insert s (t,r) m) Map.empty preludeProc
@@ -48,7 +48,7 @@ checkProg (Program _ (Body (CompoundConst c) (CompoundProc p) (CompoundVar v) s)
 --check Procedure
 checkProc :: Env -> EnvProc -> [Proc] -> EnvProc
 checkProc _ envp [] = envp
-checkProc env envp (Proc header body : p2)
+checkProc env envp ((header, body) : p2)
         | cond = checkProc env envp' p2
         | otherwise = tcError "Procedure was not defined correctly" (show header)
         where (env', envp') = procDef env envp header
@@ -56,27 +56,27 @@ checkProc env envp (Proc header body : p2)
 
 -- define procedure
 procDef :: Env -> EnvProc -> ProcHeader -> (Env, EnvProc)
-procDef env envp (Procedure s (CompoundParam p)) = (env',envp')
+procDef env envp (Procedure s p) = (env',envp')
                                    where (env', typ) = paramType Map.empty p
                                          envp' = Map.insert s (typ,Nothing) envp
-procDef env envp (Function s (CompoundParam p) t) = (env'', envp')
+procDef env envp (Function s p t) = (env'', envp')
                                     where env' = Map.insert s t Map.empty
                                           (env'', typ) = paramType env' p
                                           envp' = Map.insert s (typ,Just t) envp
 
 --check body
 checkBody :: Env -> EnvProc -> ProcBody -> Bool
-checkBody env envp (ProcBody (CompoundVar v) s) = checkStm env' envp 0 s
+checkBody env envp (v, s) = checkStm env' envp 0 s
                                     where env' = varDef env v
 -- define var
 varDef :: Env -> [Var] -> Env
 varDef env [] = env
-varDef env ((Var s t):v) = varDef (Map.insert s t env) v
+varDef env ((s, t):v) = varDef (Map.insert s t env) v
 
 -- define constant
 constDef :: Env -> [Const] -> Env
 constDef env [] = env
-constDef env (Const s _ : c) = constDef (Map.insert s (TyBasic INTEGER) env) c
+constDef env ((s, _) : c) = constDef (Map.insert s (TyBasic INTEGER) env) c
 
 -- check Parameters
 checkParam :: Env -> EnvProc -> [Exp] -> [Type] -> Bool
@@ -157,15 +157,19 @@ checkExp e p (BinOp o e1 e2) =
         | elem o [PLUS, MINUS, MULT, DIV, MOD] -> if
             | checkType t1 int && checkType t2 int -> TyBasic INTEGER
             | otherwise ->  tcError "Wrong Type for operation" (show o)
-        | elem o [GREAT, LESS, GEQUAL, LEQUAL, DIFF, EQUAL] -> if
-            | checkType t1 int && checkType t2 int -> TyBasic BOOLEAN
-            | otherwise -> tcError "Wrong Type for operation" (show o)
         | elem o [AND, OR] -> if
             | checkType t1 bool && checkType t1 bool -> bool
             | otherwise -> tcError "Wrong Type for operation" (show o)
         | otherwise -> tcError "Operation is not Binary" (show o)
         where int = TyBasic INTEGER
               bool = TyBasic BOOLEAN
+checkExp e p (RelOp o e1 e2) =
+  let t1 = checkExp e p e1
+      t2 = checkExp e p e2
+  in if
+    | checkType t1 int && checkType t2 int -> TyBasic BOOLEAN
+    | otherwise -> tcError "Wrong Type for operation" (show o)
+    where int = TyBasic INTEGER
 
 checkExp ev ep (Func i (CompoundExp p)) =
     let (typ,ret) = findProc ep i
