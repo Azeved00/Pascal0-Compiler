@@ -77,7 +77,6 @@ data Stm = AssignStm Exp Exp
          | BreakStm
          | ProcStm String Exp
          | CompoundStm [Stm]
-         | EmptyStm
          deriving Show
 
 data Exp = Num Int

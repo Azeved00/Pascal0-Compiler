@@ -2,7 +2,7 @@
 module TypeCheck where
 
 import DataTypes
-import Data.Map (Map)
+import Data.Map (Map, member)
 import qualified Data.Map as Map
 
 type Env = Map String Type
@@ -58,11 +58,15 @@ checkProc env envp ((header, body) : p2)
 procDef :: Env -> EnvProc -> ProcHeader -> (Env, EnvProc)
 procDef env envp (Procedure s p) = (env',envp')
                                    where (env', typ) = paramType Map.empty p
-                                         envp' = Map.insert s (typ,Nothing) envp
+                                         envp'
+                                           | not (member s envp) = Map.insert s (typ,Nothing) envp
+                                           | otherwise = tcError "Procedure already defined" (show s)
 procDef env envp (Function s p t) = (env'', envp')
                                     where env' = Map.insert s t Map.empty
                                           (env'', typ) = paramType env' p
-                                          envp' = Map.insert s (typ,Just t) envp
+                                          envp'
+                                            | not (member s envp) = Map.insert s (typ,Just t) envp
+                                            | otherwise = tcError "Function already defined" (show s)
 
 --check body
 checkBody :: Env -> EnvProc -> ProcBody -> Bool
@@ -71,12 +75,16 @@ checkBody env envp (v, s) = checkStm env' envp 0 s
 -- define var
 varDef :: Env -> [Var] -> Env
 varDef env [] = env
-varDef env ((s, t):v) = varDef (Map.insert s t env) v
+varDef env ((s, t):v)
+    | not (member s env) = varDef (Map.insert s t env) v
+    | otherwise = tcError "Variable already defined" (show s)
 
 -- define constant
 constDef :: Env -> [Const] -> Env
 constDef env [] = env
-constDef env ((s, _) : c) = constDef (Map.insert s (TyBasic INTEGER) env) c
+constDef env ((s, _) : c)
+  | not (member s env) = constDef (Map.insert s (TyBasic INTEGER) env) c
+  | otherwise = tcError "Constant already defined" (show s)
 
 -- check Parameters
 checkParam :: Env -> EnvProc -> [Exp] -> [Type] -> Bool

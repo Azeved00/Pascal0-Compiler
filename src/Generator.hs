@@ -14,16 +14,16 @@ type Count = (Int,Int)
 type Table = Map Id Temp
 
 genInstr :: Prog -> State Count [Instr]
-genInstr (Program _ (Body const procs vars prog)) = do 
+genInstr (Program _ (Body const procs vars prog)) = do
     t1 <- loadConsts const Map.empty
     t2 <- loadProcs procs t1
     t3 <- loadVars vars t2
-    list <- transStm t3 "" prog 
-    return (list) 
+    list <- transStm t3 "" prog
+    return (list)
 
 -------------- Load Stuff ------------------------------------
 loadVars :: [Var] -> Table -> State Count Table
-loadVars [] t = do 
+loadVars [] t = do
     return (t)
 loadVars ((id,_):vs) t = do
     temp <- newTemp
@@ -43,7 +43,7 @@ newTemp :: State Count Temp
 newTemp = do (t,l)<-get; put (t+1,l); return ("t"++show t)
 
 popTemp :: Int -> State Count ()
-popTemp k =  modify (\(t,l) -> (t-k,l)) 
+popTemp k =  modify (\(t,l) -> (t-k,l))
 
 newLabel :: State Count Label
 newLabel = do (t,l)<-get; put (t,l+1); return ("L"++show l)
@@ -110,7 +110,7 @@ transStm tab blabel (IfStm expr stm) = do
     cont <- newLabel
     codec <- transCond tab expr lt cont
     codet <- transStm tab blabel stm
-    return (codec ++ [LABEL lt] ++ codet ++ [LABEL cont]) 
+    return (codec ++ [LABEL lt] ++ codet ++ [LABEL cont])
 
 transStm tab blabel (IfElseStm expr s1 s2) =do
     l1 <- newLabel
@@ -147,7 +147,7 @@ transStm tab blabel (BreakStm) = do return [JUMP blabel]
 
 transStm tab blabel (ProcStm id expr) = do
     te <- newTemp
-    tf <- newTemp 
+    tf <- newTemp
     codeE <- transExp tab expr te
     return (codeE ++ [CALL id tf [te]])
 
