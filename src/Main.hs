@@ -12,4 +12,4 @@ main = do
     --putStrLn $ show $ alexScanTokens txt
     putStrLn $ show $ parse $ alexScanTokens txt
     putStrLn $ show $ checkProg $ parse $ alexScanTokens txt
-    --putStrLn $ show $ generate $ parse $ alexScanTokens txt
+    putStrLn $ show $ generate $ parse $ alexScanTokens txt

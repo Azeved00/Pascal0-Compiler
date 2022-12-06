@@ -5,19 +5,45 @@ import           Control.Monad.State
 import           Data.Map (Map)
 import qualified Data.Map as Map
 
-generate :: Prog -> [Instr]
-generate (Program _ (Body _ _ _ prog)) = list
-                                       where list = evalState (transStm Map.empty "" prog) (0,0)
 
-------------------------auxiliar functions---------------------------------
+
+generate :: Prog -> [Instr]
+generate p =  evalState (genInstr p) (0,0)
+
 type Count = (Int,Int)
 type Table = Map Id Temp
+
+genInstr :: Prog -> State Count [Instr]
+genInstr (Program _ (Body const procs vars prog)) = do 
+    t1 <- loadConsts const Map.empty
+    t2 <- loadProcs procs t1
+    t3 <- loadVars vars t2
+    list <- transStm t3 "" prog 
+    return (list) 
+
+-------------- Load Stuff ------------------------------------
+loadVars :: [Var] -> Table -> State Count Table
+loadVars [] t = do 
+    return (t)
+loadVars ((id,_):vs) t = do
+    temp <- newTemp
+    nt <- loadVars vs (Map.insert id temp t)
+    return (nt)
+
+loadConsts :: [Const] -> Table -> State Count Table
+loadConsts c t = do
+    return (t)
+
+loadProcs :: [Proc] -> Table -> State Count Table
+loadProcs p t = do
+    return (t)
+------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
 newTemp = do (t,l)<-get; put (t+1,l); return ("t"++show t)
 
 popTemp :: Int -> State Count ()
-popTemp k =  modify (\(t,l) -> (t-k,l))
+popTemp k =  modify (\(t,l) -> (t-k,l)) 
 
 newLabel :: State Count Label
 newLabel = do (t,l)<-get; put (t,l+1); return ("L"++show l)
@@ -50,7 +76,7 @@ transExp tab (UnOp NOT expr) dest
             return ([MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
 
 transExp tab (Func id (CompoundExp expr)) dest
-  = case Map.lookup id tab of
+    = case Map.lookup id tab of
     Nothing  -> error "undefined function"
     Just flabel -> do (code, temps) <- transExps tab expr
                       return (code ++ [CALL dest flabel temps])
@@ -59,7 +85,7 @@ transExp tab (Func id (CompoundExp expr)) dest
 -- this is weird thing ngl
 transExps :: Table -> [Exp] -> State Count ([Instr], [Temp])
 transExps tab args = worker args
-  where
+    where
     worker [] = return ([], [])
     worker (expr:exps)
       = do temp <- newTemp
@@ -76,25 +102,32 @@ transStm tab _ (AssignStm (Id s) e) = case Map.lookup s tab of
                     return (code ++ [MOVE dest temp])
 
 transStm tab blabel (CompoundStm stms)  = do
-  list <- mapM (transStm tab blabel) stms
-  return (concat list)
+    list <- mapM (transStm tab blabel) stms
+    return (concat list)
 
-transStm tab blabel (IfElseStm expr s1 s2) =
-    do  l1 <- newLabel
-        l2 <- newLabel
-        l3 <- newLabel
-        code1 <- transCond tab expr l1 l2
-        code2 <- transStm tab blabel s1
-        code3 <- transStm tab blabel s2
-        return (code1 ++ [LABEL l1] ++ code2 ++ [LABEL l3] ++ [LABEL l2] ++ code3 ++ [LABEL l3])
+transStm tab blabel (IfStm expr stm) = do  
+    lt <- newLabel
+    cont <- newLabel
+    codec <- transCond tab expr lt cont
+    codet <- transStm tab blabel stm
+    return (codec ++ [LABEL lt] ++ codet ++ [LABEL cont]) 
 
-transStm tab blabel (WhileStm expr stm) =
-    do  l1 <- newLabel
-        l2 <- newLabel
-        l3 <- newLabel
-        code1 <- transCond tab expr l1 l2
-        code2 <- transStm tab l3 stm
-        return ([LABEL l1] ++ code1 ++ [LABEL l2] ++ code2
+transStm tab blabel (IfElseStm expr s1 s2) =do
+    l1 <- newLabel
+    l2 <- newLabel
+    l3 <- newLabel
+    code1 <- transCond tab expr l1 l2
+    code2 <- transStm tab blabel s1
+    code3 <- transStm tab blabel s2
+    return (code1 ++ [LABEL l1] ++ code2 ++ [LABEL l3] ++ [LABEL l2] ++ code3 ++ [LABEL l3])
+
+transStm tab blabel (WhileStm expr stm) =do
+    l1 <- newLabel
+    l2 <- newLabel
+    l3 <- newLabel
+    code1 <- transCond tab expr l1 l2
+    code2 <- transStm tab l3 stm
+    return ([LABEL l1] ++ code1 ++ [LABEL l2] ++ code2
                                ++ [JUMP l1, LABEL l3])
 
 transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s tab of
@@ -111,6 +144,12 @@ transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s t
                                ++ code3 ++ [OPERI PLUS t1 t1 1, JUMP l1, LABEL l3])
 
 transStm tab blabel (BreakStm) = do return [JUMP blabel]
+
+transStm tab blabel (ProcStm id expr) = do
+    te <- newTemp
+    tf <- newTemp 
+    codeE <- transExp tab expr te
+    return (codeE ++ [CALL id tf [te]])
 
 -------------------------- Translate Condition ------------------------
 transCond :: Table -> Exp -> Label -> Label -> State Count [Instr]
