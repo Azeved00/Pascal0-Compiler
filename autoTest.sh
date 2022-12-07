@@ -7,12 +7,12 @@ draw () {
     esc=${1@Q}
 
     for c in $(seq 1 ${#esc}); do
-        if [[ ${esc:c+$ne:1} == '('  ]] 
+        if [[ ${esc:c+$ne:1} == '('  ]]
         then
             ((lvl+=1))
             printf '\n'
             printf "%0.s|   " $(seq 1 $lvl)
-        elif [[ ${esc:c+$ne:1} == '[' ]] 
+        elif [[ ${esc:c+$ne:1} == '[' ]]
         then
             ((lvl+=1))
             ((inList+=1))
@@ -23,10 +23,10 @@ draw () {
             printf '\n'
             printf "%0.s|   " $(seq 1 $lvl)
         elif [[ ${esc:c+$ne:1} == ')' ]]
-        then 
+        then
             ((lvl-=1))
         elif [[ ${esc:c+$ne:1} == ']' ]]
-        then 
+        then
             ((lvl-=1))
             ((inList-=1))
         elif [[ ${esc:c+$ne:1} == ' ' ]]
@@ -39,7 +39,7 @@ draw () {
         elif [[ $((c+ne +1)) == ${#esc}  ]]
         then
             break
-        else 
+        else
             printf '%c' ${esc:c+$ne:1}
         fi
     done
@@ -52,7 +52,7 @@ cabal build
 export rootFolder=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
 echo "-------------TESTING-------------"
-local par="*"
+export par="*"
 if [ -z "$1" ]
     then
         par="*"
@@ -61,16 +61,15 @@ if [ -z "$1" ]
 fi
 
 for testFolder in $rootFolder/tests/$par; do
-    if [[ -f $testFolder ]]; 
-        then continue 
+    if [[ -f $testFolder ]];
+        then continue
     fi
-    
+
     echo "TEST: $testFolder"
     if [[ -f $testFile/output.txt ]]
     then cat $testFolder/input.pas0 | cabal run -v0 | diff - $testFile/output.txt
-    else 
+    else
         res=$(cat $testFolder/input.pas0 | cabal run -v0)
         draw "$res"
     fi
 done
-
