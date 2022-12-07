@@ -105,7 +105,7 @@ transStm tab blabel (CompoundStm stms)  = do
     list <- mapM (transStm tab blabel) stms
     return (concat list)
 
-transStm tab blabel (IfStm expr stm) = do  
+transStm tab blabel (IfStm expr stm) = do
     lt <- newLabel
     cont <- newLabel
     codec <- transCond tab expr lt cont
@@ -145,11 +145,11 @@ transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s t
 
 transStm tab blabel (BreakStm) = do return [JUMP blabel]
 
-transStm tab blabel (ProcStm id expr) = do
+transStm tab blabel (ProcStm id (CompoundExp exps)) = do
     te <- newTemp
     tf <- newTemp
-    codeE <- transExp tab expr te
-    return (codeE ++ [CALL id tf [te]])
+    (codeE,tempE) <- transExps tab exps
+    return (codeE ++ [CALL id tf tempE])
 
 -------------------------- Translate Condition ------------------------
 transCond :: Table -> Exp -> Label -> Label -> State Count [Instr]
