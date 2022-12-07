@@ -131,15 +131,14 @@ transStm tab blabel (WhileStm expr stm) =do
 transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s tab of
        Nothing -> error "invalid variable"
        Just temp -> do t1 <- newTemp
-                       t2 <- newTemp
-                       code1 <- transExp tab e t1
-                       code2 <- transExp tab expr t2
+                       code1 <- transExp tab e temp
+                       code2 <- transExp tab expr t1
                        l1 <- newLabel
                        l2 <- newLabel
                        l3 <- newLabel
                        code3 <- transStm tab l3 stm
-                       return ([LABEL l1] ++ code1 ++ code2 ++ [COND t1 LESS t2 l2 l3, LABEL l2]
-                               ++ code3 ++ [OPERI PLUS t1 t1 1, JUMP l1, LABEL l3])
+                       return ( code1 ++ code2 ++ [LABEL l1, COND temp LESS t1 l2 l3, LABEL l2]
+                               ++ code3 ++ [OPERI PLUS temp temp 1, JUMP l1, LABEL l3])
 
 transStm tab blabel (BreakStm) = do return [JUMP blabel]
 
