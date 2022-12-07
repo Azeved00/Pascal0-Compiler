@@ -75,11 +75,9 @@ transExp tab (UnOp NOT expr) dest
             code <- transCond tab (UnOp NOT expr) l1 l2
             return ([MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
 
-transExp tab (Func id (CompoundExp expr)) dest
-    = case Map.lookup id tab of
-    Nothing  -> error "undefined function"
-    Just flabel -> do (code, temps) <- transExps tab expr
-                      return (code ++ [CALL dest flabel temps])
+transExp tab (Func id (CompoundExp expr)) dest = do
+    (code, temps) <- transExps tab expr
+    return (code ++ [CALL dest id temps])
 
 
 -- this is weird thing ngl
