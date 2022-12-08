@@ -16,10 +16,10 @@ type Table = Map Id Temp
 genInstr :: Prog -> State Count [Instr]
 genInstr (Program _ (Body const procs vars prog)) = do
     t1 <- loadConsts const Map.empty
-    t2 <- loadProcs procs t1
+    (t2,procs) <- loadProcs procs t1
     t3 <- loadVars vars t2
     list <- transStm t3 "" prog
-    return (list)
+    return (procs ++ list)
 
 -------------- Load Stuff ------------------------------------
 loadVars :: [Var] -> Table -> State Count Table
@@ -34,9 +34,16 @@ loadConsts :: [Const] -> Table -> State Count Table
 loadConsts c t = do
     return (t)
 
-loadProcs :: [Proc] -> Table -> State Count Table
-loadProcs p t = do
-    return (t)
+loadProcs :: [Proc] -> Table -> State Count (Table,[Instr])
+loadProcs [] tab = return (tab,[])
+loadProcs (((Procedure l params),(vrs,stms)):xs) tab = do
+    (tab2,other) <- loadProcs xs tab
+    return (tab, [LABEL l] ++ other)
+loadProcs (((Function l params tpe),(vrs,stms)):xs) tab = do
+    loadVars vrs tab
+    t <- newTemp
+    (tab2,other) <- loadProcs xs tab
+    return (tab, [LABEL l] ++ [RETURN t] ++ other)
 ------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
