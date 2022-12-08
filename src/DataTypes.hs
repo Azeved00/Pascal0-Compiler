@@ -110,6 +110,8 @@ type Id = String
 type Temp = String
 type Label = String
 
+type ICode = ([Def], [Instr])
+
 data Instr = MOVE Temp Temp
            | MOVEI Temp Int
            | MOVES Temp Label
@@ -119,8 +121,12 @@ data Instr = MOVE Temp Temp
            | JUMP Label
            | COND Temp Op Temp Label Label
            | CONDI Temp Op Int Label Label
-           | CALL Temp Id [Temp]
+           | CALL Temp Label [Temp]
            | LOAD Temp Int Temp
            | SAVE Temp Int Temp
            | RETURN Temp
            deriving Show
+
+data Def = DARRAY Label Int
+         | DSTRING Label String
+         deriving Show

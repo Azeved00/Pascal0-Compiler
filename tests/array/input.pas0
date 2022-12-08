@@ -5,5 +5,6 @@ var
 begin
    fib[0] := 5;
    n := fib[0];
+   writestr('Number: ');
    writeint(n)
 end.

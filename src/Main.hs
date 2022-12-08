@@ -12,8 +12,11 @@ main = do
     let lexer = alexScanTokens txt
         pars  = parse $ lexer
         typ   = checkProg $ pars
-        code  = generate $ pars
+        (_data, _text)  = generate $ pars
     --putStrLn $ show $ lexer
     --putStrLn $ show $ pars
     --putStrLn $ show $ typ
-    if typ then putStrLn $ show $ code else return ()
+    if typ then
+        do putStrLn (".data:\n" ++ (show _data))
+           putStrLn (".text:\n" ++ (show _text))
+    else return ()
