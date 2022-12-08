@@ -2,7 +2,7 @@
 
 draw () {
     local lvl=0
-    local ne=1
+    local ne=0
     local inList=0
     esc=${1@Q}
 
