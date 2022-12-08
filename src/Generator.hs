@@ -19,7 +19,7 @@ genInstr (Program _ (Body const procs vars prog)) = do
     procs <- loadProcs t1 procs 
     t2 <- loadVars t1 vars
     list <- transStm t2 "" prog
-    return (procs ++ [LABEL "Main"]++list)
+    return ([JUMP "Main"] ++ procs ++ [LABEL "Main"]++list)
 
 -------------- Load Stuff ------------------------------------
 loadVars :: Table -> [Var] -> State Count Table
