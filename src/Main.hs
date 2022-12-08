@@ -9,7 +9,11 @@ import Generator
 
 main = do
     txt <- getContents
-    --putStrLn $ show $ alexScanTokens txt
-    --putStrLn $ show $ parse $ alexScanTokens txt
-    --putStrLn $ show $ checkProg $ parse $ alexScanTokens txt
-    putStrLn $ show $ generate $ parse $ alexScanTokens txt
+    let lexer = alexScanTokens txt
+        pars  = parse $ lexer
+        typ   = checkProg $ pars
+        code  = generate $ pars
+    --putStrLn $ show $ lexer
+    --putStrLn $ show $ pars
+    --putStrLn $ show $ typ
+    if typ then putStrLn $ show $ code else return ()
