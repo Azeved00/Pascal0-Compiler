@@ -15,8 +15,8 @@ type Table = Map Id Temp
 
 genInstr :: Prog -> State Count [Instr]
 genInstr (Program _ (Body const procs vars prog)) = do
-    t1 <- loadConsts Map.empty const 
-    procs <- loadProcs t1 procs 
+    t1 <- loadConsts Map.empty const
+    procs <- loadProcs t1 procs
     t2 <- loadVars t1 vars
     list <- transStm t2 "" prog
     return ([JUMP "Main"] ++ procs ++ [LABEL "Main"]++list)
@@ -33,7 +33,7 @@ loadConsts :: Table -> [Const] -> State Count Table
 loadConsts t [] = return (t)
 loadConsts t ((id,_):vs) = do
     temp <- newTemp
-    nt <- loadConsts (Map.insert id temp t) vs 
+    nt <- loadConsts (Map.insert id temp t) vs
     return (nt)
 
 loadParams :: Table -> [Param] -> State Count Table
@@ -47,11 +47,11 @@ loadParams t ((id,_):xs) = do
 loadProcs :: Table -> [Proc] -> State Count [Instr]
 loadProcs tab []= return ([])
 loadProcs tab (((Procedure l params),(vrs,stms)):xs) = do
-    ntab1   <- loadParams tab params 
+    ntab1   <- loadParams tab params
     ntab2   <- loadVars ntab1 vrs
     endl    <- newLabel
     stcode  <- transStm ntab2 l stms
-    other   <- loadProcs tab xs 
+    other   <- loadProcs tab xs
     return ([LABEL l] ++ stcode ++ other)
 
 loadProcs tab (((Function id params tpe),(vrs,stms)):xs) = do
@@ -64,7 +64,7 @@ loadProcs tab (((Function id params tpe),(vrs,stms)):xs) = do
 ------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
-newTemp = do (t,l)<-get; put (t+1,l); return ("t"++show t) 
+newTemp = do (t,l)<-get; put (t+1,l); return ("t"++show t)
 popTemp :: Int -> State Count ()
 popTemp k =  modify (\(t,l) -> (t-k,l))
 
@@ -79,7 +79,13 @@ transExp tab (Id s) dest = case Map.lookup s tab of
     Just temp -> return [MOVE dest temp]
     Nothing -> error ("Error:" ++ show s ++ " invalid variable")
 
-transExp tab (BinOp op e1 e2) dest = do    
+transExp tab (Array s expr) dest = case Map.lookup s tab of
+    Just temp -> do t1 <- newTemp
+                    code <- transExp tab expr t1
+                    return ([MOVES temp s] ++ code ++ [OPER PLUS temp temp t1, LOAD temp 0 dest])
+    Nothing -> error ("Error:" ++ show s ++ " invalid variable")
+
+transExp tab (BinOp op e1 e2) dest = do
     t1 <- newTemp
     t2 <- newTemp
     code1 <- transExp tab e1 t1
@@ -126,6 +132,14 @@ transStm tab _ (AssignStm (Id s) e) = case Map.lookup s tab of
     Just dest -> do temp <- newTemp
                     code <- transExp tab e temp
                     return (code ++ [MOVE dest temp])
+
+transStm tab _ (AssignStm (Array s expr) e) = case Map.lookup s tab of
+    Nothing -> error "Undefined variable"
+    Just dest -> do t1 <- newTemp
+                    code1 <- transExp tab expr t1
+                    t2 <- newTemp
+                    code2 <- transExp tab e t2
+                    return ([MOVES dest s] ++ code1 ++ [OPER PLUS dest dest t1] ++ code2 ++ [SAVE t2 0 dest])
 
 transStm tab blabel (CompoundStm stms)  = do
     list <- mapM (transStm tab blabel) stms

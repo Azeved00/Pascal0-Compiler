@@ -112,6 +112,7 @@ type Label = String
 
 data Instr = MOVE Temp Temp
            | MOVEI Temp Int
+           | MOVES Temp Label
            | OPER Op Temp Temp Temp
            | OPERI Op Temp Temp Int
            | LABEL Label
@@ -119,5 +120,7 @@ data Instr = MOVE Temp Temp
            | COND Temp Op Temp Label Label
            | CONDI Temp Op Int Label Label
            | CALL Temp Id [Temp]
+           | LOAD Temp Int Temp
+           | SAVE Temp Int Temp
            | RETURN Temp
            deriving Show
