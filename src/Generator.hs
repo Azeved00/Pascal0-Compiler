@@ -16,8 +16,8 @@ type Table = Map Id Temp
 genInstr :: Prog -> State Count ICode
 genInstr (Program _ (Body const procs vars prog)) = do
     t1 <- loadConsts Map.empty const
-    (def1, procs) <- loadProcs t1 procs
-    (t2, def2) <- loadVars t1 vars
+    (def1, procs) <- loadProcs t1 procs const
+    (t2, def2) <- loadVars t1 vars const
     (def3, list) <- transStm t2 "" prog
     return (def1++def2++def3, [JUMP "Main"] ++ procs ++ [LABEL "Main"]++list)
 
@@ -27,15 +27,25 @@ myconcat ((d,i):xs) = (d++d1, i++i1)
                     where (d1,i1) = myconcat xs
 
 -------------- Load Stuff ------------------------------------
-loadVars :: Table -> [Var] -> State Count (Table, [Def])
-loadVars t [] = return (t, [])
-loadVars t ((id,TyArray _ _ _):vs) = do
+getConstValues :: [Const] -> Exp  -> Int
+getConstValues _ (Num n) = n 
+getConstValues [] e = error ("Error : " ++ show e++ "is not available");
+getConstValues ((id,v):xs) (Id c) = 
+    if (id == c) then v 
+    else getConstValues xs (Id c)
+getConstValues _ e = error ("Error: "++ show e ++ " is not valid array definition") 
+
+loadVars :: Table -> [Var] -> [Const] -> State Count (Table, [Def])
+loadVars t [] _ = return (t, [])
+loadVars t ((id,TyArray _ e1 e2):vs)  consts= do
     temp <- newTemp
-    (nt, def) <- loadVars (Map.insert id temp t) vs
-    return (nt, def ++ [DARRAY id 100])
-loadVars t ((id,_):vs) = do
+    (nt, def) <- loadVars (Map.insert id temp t) vs consts
+    let size = (getConstValues consts e2) - (getConstValues consts e1) 
+    if(size > 0) then return (nt, def ++ [DARRAY id size])
+    else error ( "Error: Array" ++ show id ++" has an invalid size")
+loadVars t ((id,_):vs) consts  = do
     temp <- newTemp
-    (nt, def) <- loadVars (Map.insert id temp t) vs
+    (nt, def) <- loadVars (Map.insert id temp t) vs consts
     return (nt, def)
 
 loadConsts :: Table -> [Const] -> State Count Table
@@ -53,22 +63,22 @@ loadParams t ((id,_):xs) = do
     return (ntab)
 
 
-loadProcs :: Table -> [Proc] -> State Count ICode
-loadProcs tab [] = return ([],[])
-loadProcs tab (((Procedure l params),(vrs,stms)):xs) = do
+loadProcs :: Table -> [Proc] -> [Const] -> State Count ICode
+loadProcs tab [] _= return ([],[])
+loadProcs tab (((Procedure l params),(vrs,stms)):xs) const = do
     ntab1   <- loadParams tab params
-    (ntab2, def1)   <- loadVars ntab1 vrs
+    (ntab2, def1)   <- loadVars ntab1 vrs const
     endl    <- newLabel
     (def2, stcode)  <- transStm ntab2 l stms
-    (def3, other)   <- loadProcs tab xs
+    (def3, other)   <- loadProcs tab xs const
     return (def1++def2++def3, [LABEL l] ++ stcode ++ other)
 
-loadProcs tab (((Function id params tpe),(vrs,stms)):xs) = do
+loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
     ntab1   <- loadParams tab params
-    (ntab2, def1)   <- loadVars ntab1 ((id,tpe):vrs)
+    (ntab2, def1)   <- loadVars ntab1 ((id,tpe):vrs) const
     endl    <- newLabel
     (def2, fcode)   <- transStm ntab2 endl stms
-    (def3, other)   <- loadProcs tab xs
+    (def3, other)   <- loadProcs tab xs const
     return (def1++def2++def3, [LABEL id] ++ fcode ++[RETURN id] ++ other)
 ------------------------auxiliar functions---------------------------------
 
