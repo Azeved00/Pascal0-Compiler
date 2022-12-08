@@ -15,40 +15,56 @@ type Table = Map Id Temp
 
 genInstr :: Prog -> State Count [Instr]
 genInstr (Program _ (Body const procs vars prog)) = do
-    t1 <- loadConsts const Map.empty
-    (t2,procs) <- loadProcs procs t1
-    t3 <- loadVars vars t2
-    list <- transStm t3 "" prog
-    return (procs ++ list)
+    t1 <- loadConsts Map.empty const 
+    procs <- loadProcs t1 procs 
+    t2 <- loadVars t1 vars
+    list <- transStm t2 "" prog
+    return (procs ++ [LABEL "Main"]++list)
 
 -------------- Load Stuff ------------------------------------
-loadVars :: [Var] -> Table -> State Count Table
-loadVars [] t = do
-    return (t)
-loadVars ((id,_):vs) t = do
+loadVars :: Table -> [Var] -> State Count Table
+loadVars t [] = return (t)
+loadVars t ((id,_):vs) = do
     temp <- newTemp
-    nt <- loadVars vs (Map.insert id temp t)
+    nt <- loadVars (Map.insert id temp t) vs
     return (nt)
 
-loadConsts :: [Const] -> Table -> State Count Table
-loadConsts c t = do
-    return (t)
+loadConsts :: Table -> [Const] -> State Count Table
+loadConsts t [] = return (t)
+loadConsts t ((id,_):vs) = do
+    temp <- newTemp
+    nt <- loadConsts (Map.insert id temp t) vs 
+    return (nt)
 
-loadProcs :: [Proc] -> Table -> State Count (Table,[Instr])
-loadProcs [] tab = return (tab,[])
-loadProcs (((Procedure l params),(vrs,stms)):xs) tab = do
-    (tab2,other) <- loadProcs xs tab
-    return (tab, [LABEL l] ++ other)
-loadProcs (((Function l params tpe),(vrs,stms)):xs) tab = do
-    loadVars vrs tab
-    t <- newTemp
-    (tab2,other) <- loadProcs xs tab
-    return (tab, [LABEL l] ++ [RETURN t] ++ other)
+loadParams :: Table -> [Param] -> State Count Table
+loadParams t [] = return (t)
+loadParams t ((id,_):xs) = do
+    temp <- newTemp
+    ntab <- loadParams (Map.insert id temp t) xs
+    return (ntab)
+
+
+loadProcs :: Table -> [Proc] -> State Count [Instr]
+loadProcs tab []= return ([])
+loadProcs tab (((Procedure l params),(vrs,stms)):xs) = do
+    ntab1   <- loadParams tab params 
+    ntab2   <- loadVars ntab1 vrs
+    endl    <- newLabel
+    stcode  <- transStm ntab2 l stms
+    other   <- loadProcs tab xs 
+    return ([LABEL l] ++ stcode ++ other)
+
+loadProcs tab (((Function id params tpe),(vrs,stms)):xs) = do
+    ntab1   <- loadParams tab params
+    ntab2   <- loadVars ntab1 ((id,tpe):vrs)
+    endl    <- newLabel
+    fcode   <- transStm ntab2 endl stms
+    other   <- loadProcs tab xs
+    return ([LABEL id] ++ fcode ++[RETURN id] ++ other)
 ------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
-newTemp = do (t,l)<-get; put (t+1,l); return ("t"++show t)
-
+newTemp = do (t,l)<-get; put (t+1,l); return ("t"++show t) 
 popTemp :: Int -> State Count ()
 popTemp k =  modify (\(t,l) -> (t-k,l))
 
@@ -60,7 +76,7 @@ transExp :: Table -> Exp -> Temp -> State Count [Instr]
 transExp tab (Num n) dest = do return [MOVEI dest n]
 transExp tab (Id s) dest = case Map.lookup s tab of
     Just temp -> return [MOVE dest temp]
-    Nothing -> error "invalid variable"
+    Nothing -> error ("Error:" ++ show s ++ " invalid variable")
 
 transExp tab (BinOp op e1 e2) dest
     = do    t1 <- newTemp
