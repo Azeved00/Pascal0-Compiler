@@ -30,6 +30,10 @@ checkType (TyArray t1 _ _) (TyArray t2 _ _) = t1 == t2
 checkType (TyBasic t1) (TyArray t2 _ _) = t1 == t2
 checkType (TyArray t1 _ _) (TyBasic t2) = t1 == t2
 
+checkArray :: Type -> Bool
+checkArray (TyArray _ _ _) = True
+checkArray _ = False
+
 paramType :: Env -> [Param] -> (Env,[Type])
 paramType env [] = (env, [])
 paramType env ((s, t) : p) = (e2,t1++t2)
@@ -100,12 +104,14 @@ checkStm env envp _ (BreakStm) = True
 checkStm env envp lvl (CompoundStm stm) = let value = map (checkStm env envp lvl) stm in
         foldl (&&) True value
 checkStm env envp lvl (AssignStm (Id id) exp) = if
-        | checkType (checkExp env envp exp) typ -> True
-        | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
+        | not(checkArray typ) -> if | checkType (checkExp env envp exp) typ  -> True
+                                    | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
+        | otherwise -> tcError ("Wrong Usage Of Array") id
         where typ = findEnv env id
 checkStm env envp lvl (AssignStm (Array id _) exp) = if
-        | checkType (checkExp env envp exp) typ -> True
-        | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
+        | checkArray typ -> if | checkType (checkExp env envp exp) typ -> True
+                               | otherwise -> tcError ("error assigning " ++ (show exp) ++ " to") id
+        | otherwise -> tcError ("Wrong Usage Of Array") id
         where typ = findEnv env id
 checkStm env envp lvl (IfStm cond stm) = if
         | tycond && check -> True
