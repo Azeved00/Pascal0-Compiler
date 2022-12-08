@@ -74,34 +74,39 @@ newLabel = do (t,l)<-get; put (t,l+1); return ("L"++show l)
 -------------------- Trans Exp-------------------------------------------
 transExp :: Table -> Exp -> Temp -> State Count [Instr]
 transExp tab (Num n) dest = do return [MOVEI dest n]
+
 transExp tab (Id s) dest = case Map.lookup s tab of
     Just temp -> return [MOVE dest temp]
     Nothing -> error ("Error:" ++ show s ++ " invalid variable")
 
-transExp tab (BinOp op e1 e2) dest
-    = do    t1 <- newTemp
-            t2 <- newTemp
-            code1 <- transExp tab e1 t1
-            code2 <- transExp tab e2 t2
-            return (code1 ++ code2 ++ [OPER op dest t1 t2])
-transExp tab (RelOp op e1 e2) dest
-        = do    l1 <- newLabel
-                l2 <- newLabel
-                code <- transCond tab (RelOp op e1 e2) l1 l2
-                return ([MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
+transExp tab (BinOp op e1 e2) dest = do    
+    t1 <- newTemp
+    t2 <- newTemp
+    code1 <- transExp tab e1 t1
+    code2 <- transExp tab e2 t2
+    return (code1 ++ code2 ++ [OPER op dest t1 t2])
+
+transExp tab (RelOp op e1 e2) dest = do
+    l1 <- newLabel
+    l2 <- newLabel
+    code <- transCond tab (RelOp op e1 e2) l1 l2
+    return ([MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
+
 transExp tab (Bool b) dest
       | b = do return [MOVEI dest 1]
       | otherwise = do return [MOVEI dest 0]
-transExp tab (UnOp NOT expr) dest
-    = do    l1 <- newLabel
-            l2 <- newLabel
-            code <- transCond tab (UnOp NOT expr) l1 l2
-            return ([MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
+
+transExp tab (UnOp NOT expr) dest = do
+    l1 <- newLabel
+    l2 <- newLabel
+    code <- transCond tab (UnOp NOT expr) l1 l2
+    return ([MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
 
 transExp tab (Func id (CompoundExp expr)) dest = do
     (code, temps) <- transExps tab expr
     return (code ++ [CALL dest id temps])
 
+transExp _ exp _ = error ("Error: Cant 't parse" ++ show exp)
 
 -- this is weird thing ngl
 transExps :: Table -> [Exp] -> State Count ([Instr], [Temp])
@@ -171,6 +176,7 @@ transStm tab blabel (ProcStm id (CompoundExp exps)) = do
     (codeE,tempE) <- transExps tab exps
     return (codeE ++ [CALL id tf tempE])
 
+transStm tab blabel st = error ("Error: Can't parse statement: " ++ show st)
 -------------------------- Translate Condition ------------------------
 transCond :: Table -> Exp -> Label -> Label -> State Count [Instr]
 transCond _ (Bool True) lt _ = do return [JUMP lt]
