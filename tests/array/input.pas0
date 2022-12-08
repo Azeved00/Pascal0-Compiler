@@ -1,0 +1,9 @@
+program Fibonnacci;
+var
+   fib : array[0..n] of integer;
+   n : integer;
+begin
+   fib[0] := 5;
+   n := fib[0];
+   writeint(n)
+end.

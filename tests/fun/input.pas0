@@ -1,0 +1,8 @@
+Program Fun;
+Function test(n: integer): Boolean;
+Begin
+  writeint(n)
+end;
+Begin
+  test(5)
+End.
