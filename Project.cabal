@@ -23,7 +23,8 @@ executable Trabalho
     Parser,
     TypeCheck,
     DataTypes,
-    Generator
+    Generator,
+    MachineGenerator
   -- other-extensions:
   build-tools:         alex, happy
   build-depends:      base >=4.12 && <4.14, containers, array, mtl
