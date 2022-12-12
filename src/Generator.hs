@@ -28,19 +28,19 @@ myconcat ((d,i):xs) = (d++d1, i++i1)
 
 -------------- Load Stuff ------------------------------------
 getConstValues :: [Const] -> Exp  -> Int
-getConstValues _ (Num n) = n 
+getConstValues _ (Num n) = n
 getConstValues [] e = error ("Error : " ++ show e++ "is not available");
-getConstValues ((id,v):xs) (Id c) = 
-    if (id == c) then v 
+getConstValues ((id,v):xs) (Id c) =
+    if (id == c) then v
     else getConstValues xs (Id c)
-getConstValues _ e = error ("Error: "++ show e ++ " is not valid array definition") 
+getConstValues _ e = error ("Error: "++ show e ++ " is not valid array definition")
 
 loadVars :: Table -> [Var] -> [Const] -> State Count (Table, [Def])
 loadVars t [] _ = return (t, [])
 loadVars t ((id,TyArray _ e1 e2):vs)  consts= do
     temp <- newTemp
     (nt, def) <- loadVars (Map.insert id temp t) vs consts
-    let size = (getConstValues consts e2) - (getConstValues consts e1) 
+    let size = (getConstValues consts e2) - (getConstValues consts e1)
     if(size > 0) then return (nt, def ++ [DARRAY id size])
     else error ( "Error: Array" ++ show id ++" has an invalid size")
 loadVars t ((id,_):vs) consts  = do
@@ -186,7 +186,7 @@ transStm tab blabel (IfElseStm expr s1 s2) =do
     (def1, code1) <- transCond tab expr l1 l2
     (def2, code2) <- transStm tab blabel s1
     (def3, code3) <- transStm tab blabel s2
-    return (def1++def2++def3, code1 ++ [LABEL l1] ++ code2 ++ [LABEL l3] ++ [LABEL l2]
+    return (def1++def2++def3, code1 ++ [LABEL l1] ++ code2 ++ [JUMP l3] ++ [LABEL l2]
                               ++ code3 ++ [LABEL l3])
 
 transStm tab blabel (WhileStm expr stm) =do
