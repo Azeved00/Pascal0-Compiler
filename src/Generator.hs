@@ -15,11 +15,11 @@ type Table = Map Id Temp
 
 genInstr :: Prog -> State Count ICode
 genInstr (Program _ (Body const procs vars prog)) = do
-    t1 <- loadConsts Map.empty const
+    (t1,(_,consts))<- loadConsts Map.empty const
     (def1, procs) <- loadProcs t1 procs const
     (t2, def2) <- loadVars t1 vars const
     (def3, list) <- transStm t2 "" prog
-    return (def1++def2++def3, [JUMP "Main"] ++ procs ++ [LABEL "Main"]++list)
+    return (def1++def2++def3,consts ++ procs ++ [LABEL "Main"]++list)
 
 myconcat :: [ICode] -> ICode
 myconcat [] = ([],[])
@@ -48,12 +48,12 @@ loadVars t ((id,_):vs) consts  = do
     (nt, def) <- loadVars (Map.insert id temp t) vs consts
     return (nt, def)
 
-loadConsts :: Table -> [Const] -> State Count Table
-loadConsts t [] = return (t)
-loadConsts t ((id,_):vs) = do
+loadConsts :: Table -> [Const] -> State Count (Table,ICode)
+loadConsts t [] = return (t,([],[]))
+loadConsts t ((id,v):vs) = do
     temp <- newTemp
-    nt <- loadConsts (Map.insert id temp t) vs
-    return (nt)
+    (nt,(_,t)) <- loadConsts (Map.insert id temp t) vs
+    return (nt,([],[MOVEI temp v] ++ t))
 
 loadParams :: Table -> [Param] -> State Count Table
 loadParams t [] = return (t)
@@ -83,14 +83,14 @@ loadProcs tab (((Procedure l params),(vrs,stms)):xs) const = do
     return (def1++def2++def3, [LABEL l] ++ stcode ++ other)
 
 loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
-    ntab0   <- loadParams tab params
-    ntab1   <- loadReturn ntab0 id
+    ntab0   <- loadReturn tab id
+    ntab1   <- loadParams ntab0 params
     (ntab2, def1)   <- loadVars ntab1 vrs const
     popParam (length ntab1)
     endl    <- newLabel
     (def2, fcode)   <- transStm ntab2 endl stms
     (def3, other)   <- loadProcs tab xs const
-    return (def1++def2++def3, [LABEL id] ++ fcode ++[RETURN id] ++ other)
+    return (def1++def2++def3, [LABEL id] ++ fcode ++[RETURN "$s0"] ++ other)
 ------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
@@ -157,7 +157,9 @@ transExp tab (UnOp NOT expr) dest = do
     return (def, [MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
 
 transExp tab (Func id (CompoundExp expr)) dest = do
-    ((def, code), temps) <- transExps tab expr
+    temp <- newParam
+    ntab0 <- transform(Map.insert id temp tab)
+    ((def, code), temps) <- transExps ntab0 expr
     popParam (length temps)
     return (def, code ++ [CALLF dest id temps])
 
