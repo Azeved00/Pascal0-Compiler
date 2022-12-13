@@ -11,11 +11,25 @@ writeInstr cmd params = writeLine True (cmd ++ (foldl (\a b -> a ++ " " ++ b) " 
 
 takeThings :: String -> String
 takeThings a = init (tail a)
+
+saveS ::String
+saveS = 
+    (writeInstr "la" ["$v0"])++
+    concat [writeInstr "sw" ["$s"++show a , (show (a*4)) ++"($v0)"] |  a <- [0..7]]
+
+
+getS :: String
+getS  = 
+    (writeInstr "la" ["$v0"])++
+    concat [writeInstr "lw" ["$s"++show a , (show (a*4)) ++ "($v0)"] |  a <- [0..7]]
 -----------------------------Geracao de codigo maquina--------------------------------
 genMachineCode :: ICode -> String
 genMachineCode (defs,instrs) = 
-    (writeLine False ".data")++(genData defs) ++ 
-    (writeLine False ".text")++(genInstr instrs)
+    (writeLine False ".data")++
+    (genData defs) ++ 
+    (writeLine False ".text")++
+    (writeInstr "j" ["Main"])++
+    (genInstr instrs)
 
 ----------------GENERATE DATA------------------------
 genData :: [Def] -> String
@@ -43,11 +57,25 @@ genInstr ((CALLP "writestr" [i]):xs) =
     (writeInstr "syscall" []) ++
     (genInstr xs)
 
-
 genInstr ((CALLF dest "readint" _):xs) = 
     (writeInstr "li" ["$v0","5"]) ++
     (writeInstr "syscall" []) ++
     (writeInstr "move" [dest,"$v0"])++
+    (genInstr xs)
+
+----------------FUNCTIONS AND PROCEDURES-----------
+genInstr ((CALLP id _):xs) = 
+    (writeInstr "jal" [id]) ++
+    (genInstr xs)
+
+genInstr ((CALLF dest id _):xs) =
+    (writeInstr "jal" [id]) ++
+    (writeInstr "move" [dest,"$v0"]) ++
+    (genInstr xs)
+
+genInstr ((RETURN v):xs) = 
+    (writeInstr "move" ["$v0",v]) ++
+    (writeInstr "jr" ["$ra"]) ++
     (genInstr xs)
 ----------------------BASIC JUMPS-------------------
 genInstr ((LABEL l):xs)     = (writeLine False (l++":")) ++ (genInstr xs)
