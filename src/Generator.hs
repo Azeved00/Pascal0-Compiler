@@ -8,9 +8,9 @@ import qualified Data.Map as Map
 
 
 generate :: Prog -> ICode
-generate p =  evalState (genInstr p) (0,0,0)
+generate p =  evalState (genInstr p) (0,0,0,3,0)
 
-type Count = (Int,Int,Int)
+type Count = (Int,Int,Int,Int,Int)
 type Table = Map Id Temp
 
 genInstr :: Prog -> State Count ICode
@@ -38,13 +38,13 @@ getConstValues _ e = error ("Error: "++ show e ++ " is not valid array definitio
 loadVars :: Table -> [Var] -> [Const] -> State Count (Table, [Def])
 loadVars t [] _ = return (t, [])
 loadVars t ((id,TyArray _ e1 e2):vs)  consts= do
-    temp <- newTemp
+    temp <- newVar
     (nt, def) <- loadVars (Map.insert id temp t) vs consts
     let size = (getConstValues consts e2) - (getConstValues consts e1)
     if(size > 0) then return (nt, def ++ [DARRAY id size])
     else error ( "Error: Array" ++ show id ++" has an invalid size")
 loadVars t ((id,_):vs) consts  = do
-    temp <- newTemp
+    temp <- newVar
     (nt, def) <- loadVars (Map.insert id temp t) vs consts
     return (nt, def)
 
@@ -58,24 +58,35 @@ loadConsts t ((id,_):vs) = do
 loadParams :: Table -> [Param] -> State Count Table
 loadParams t [] = return (t)
 loadParams t ((id,_):xs) = do
-    temp <- newTemp
+    temp <- newParam
     ntab <- loadParams (Map.insert id temp t) xs
     return (ntab)
 
+loadReturn :: Table -> Id -> State Count Table
+loadReturn tab id = do
+    ret <- newParam
+    ntab <- transform (Map.insert id ret tab)
+    return (ntab)
+
+transform :: Table -> State Count Table
+transform t = return (t)
 
 loadProcs :: Table -> [Proc] -> [Const] -> State Count ICode
 loadProcs tab [] _= return ([],[])
 loadProcs tab (((Procedure l params),(vrs,stms)):xs) const = do
     ntab1   <- loadParams tab params
     (ntab2, def1)   <- loadVars ntab1 vrs const
+    popParam (length ntab1)
     endl    <- newLabel
     (def2, stcode)  <- transStm ntab2 l stms
     (def3, other)   <- loadProcs tab xs const
     return (def1++def2++def3, [LABEL l] ++ stcode ++ other)
 
 loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
-    ntab1   <- loadParams tab params
-    (ntab2, def1)   <- loadVars ntab1 ((id,tpe):vrs) const
+    ntab0   <- loadParams tab params
+    ntab1   <- loadReturn ntab0 id
+    (ntab2, def1)   <- loadVars ntab1 vrs const
+    popParam (length ntab1)
     endl    <- newLabel
     (def2, fcode)   <- transStm ntab2 endl stms
     (def3, other)   <- loadProcs tab xs const
@@ -83,16 +94,25 @@ loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
 ------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
-newTemp = do (t,l,s)<-get; put (t+1,l,s); return ("$t"++show t)
+newTemp = do (t,l,str,s,p)<-get; put (t+1,l,str,s,p); return ("$t"++show t)
 
 popTemp :: Int -> State Count ()
-popTemp k =  modify (\(t,l,s) -> (t-k,l,s))
+popTemp k =  modify (\(t,l,str,s,p) -> (t-k,l,str,s,p))
 
 newLabel :: State Count Label
-newLabel = do (t,l,s)<-get; put (t,l+1,s); return ("L"++show l)
+newLabel = do (t,l,str,s,p)<-get; put (t,l+1,str,s,p); return ("L"++show l)
 
 newStr :: State Count Label
-newStr = do (t,l,s)<-get; put (t,l,s+1); return ("s"++show l)
+newStr = do (t,l,str,s,p)<-get; put (t,l,str+1,s,p); return ("_str"++show str)
+
+newVar :: State Count Temp
+newVar = do (t,l,str,s,p)<-get; put (t,l,str,s+1,p); return ("$s"++show s)
+
+newParam :: State Count Temp
+newParam = do (t,l,str,s,p)<-get; put (t,l,str,s,p+1); return ("$s"++show p)
+
+popParam :: Int -> State Count ()
+popParam k =  modify (\(t,l,str,s,p) -> (t,l,str,s,p-k))
 
 -------------------- Trans Exp-------------------------------------------
 transExp :: Table -> Exp -> Temp -> State Count ICode
@@ -108,6 +128,7 @@ transExp tab (Str s) dest = do ls <- newStr
 transExp tab (Array s expr) dest = case Map.lookup s tab of
     Just temp -> do t1 <- newTemp
                     (def, code) <- transExp tab expr t1
+                    popTemp 1
                     return (def, [MOVES temp s] ++ code ++ [OPER PLUS temp temp t1, LOAD temp 0 dest])
     Nothing -> error ("Error:" ++ show s ++ " invalid variable")
 
@@ -116,6 +137,7 @@ transExp tab (BinOp op e1 e2) dest = do
     t2 <- newTemp
     (def1, code1) <- transExp tab e1 t1
     (def2, code2) <- transExp tab e2 t2
+    popTemp 2
     return (def1++def2, code1 ++ code2 ++ [OPER op dest t1 t2])
 
 transExp tab (RelOp op e1 e2) dest = do
@@ -136,6 +158,7 @@ transExp tab (UnOp NOT expr) dest = do
 
 transExp tab (Func id (CompoundExp expr)) dest = do
     ((def, code), temps) <- transExps tab expr
+    popParam (length temps)
     return (def, code ++ [CALL dest id temps])
 
 transExp _ exp _ = error ("Error: Cant 't parse" ++ show exp)
@@ -146,7 +169,7 @@ transExps tab args = worker args
     where
     worker [] = return (([], []), [])
     worker (expr:exps)
-      = do temp <- newTemp
+      = do temp <- newParam
            (def, code) <- transExp tab expr temp
            ((def', code'), temps) <- worker exps
            return ((def++def', code++code'), temp:temps)
@@ -157,16 +180,18 @@ transStm tab _ (AssignStm (Id s) e) = case Map.lookup s tab of
     Nothing -> error "Undefined variable"
     Just dest -> do temp <- newTemp
                     (def, code) <- transExp tab e temp
+                    popTemp 1
                     return (def, code ++ [MOVE dest temp])
 
 transStm tab _ (AssignStm (Array s expr) e) = case Map.lookup s tab of
     Nothing -> error "Undefined variable"
     Just dest -> do t1 <- newTemp
-                    (def1, code1) <- transExp tab expr t1
                     t2 <- newTemp
-                    (def2, code2) <- transExp tab e t2
-                    return (def1++def2, [MOVES dest s] ++ code1 ++ [OPER PLUS dest dest t1]
-                                        ++ code2 ++ [SAVE t2 0 dest])
+                    (def1, code1) <- transExp tab expr t2
+                    (def2, code2) <- transExp tab e t1
+                    popTemp 1
+                    return (def1++def2, [MOVES dest s] ++ code1 ++ [OPER PLUS dest dest t2]
+                                        ++ code2 ++ [SAVE t1 0 dest])
 
 transStm tab blabel (CompoundStm stms)  = do
     list <- mapM (transStm tab blabel) stms
@@ -193,10 +218,10 @@ transStm tab blabel (WhileStm expr stm) =do
     l1 <- newLabel
     l2 <- newLabel
     l3 <- newLabel
-    (def1, code1) <- transCond tab expr l1 l2
-    (def2, code2) <- transStm tab l3 stm
-    return (def1++def2, [LABEL l1] ++ code1 ++ [LABEL l2] ++ code2
-                               ++ [JUMP l1, LABEL l3])
+    (def1, code1) <- transStm tab l3 stm
+    (def2, code2) <- transCond tab expr l1 l2
+    return (def1++def2, [JUMP l3, LABEL l1] ++ code1 ++ [LABEL l3] ++ code2
+                               ++ [LABEL l2])
 
 transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s tab of
        Nothing -> error "invalid variable"
@@ -207,6 +232,7 @@ transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s t
                        l2 <- newLabel
                        l3 <- newLabel
                        (def3, code3) <- transStm tab l3 stm
+                       popTemp 1
                        return (def1++def2++def3, code1 ++ code2 ++ [LABEL l1, COND temp LEQUAL t1 l2 l3, LABEL l2]
                                ++ code3 ++ [OPERI PLUS temp temp 1, JUMP l1, LABEL l3])
 
@@ -214,9 +240,10 @@ transStm tab blabel (BreakStm) = do return ([], [JUMP blabel])
 
 transStm tab blabel (ProcStm id (CompoundExp exps)) = do
     te <- newTemp
-    tf <- newTemp
     ((defE, codeE),tempE) <- transExps tab exps
-    return (defE, codeE ++ [CALL id tf tempE])
+    popTemp 1
+    popParam (length tempE)
+    return (defE, codeE ++ [CALL id te tempE])
 
 transStm tab blabel st = error ("Error: Can't parse statement: " ++ show st)
 -------------------------- Translate Condition ------------------------
@@ -239,9 +266,11 @@ transCond tab (RelOp relop e1 e2) lt lf = do
     t2 <- newTemp
     (def1, code1) <- transExp tab e1 t1
     (def2, code2) <- transExp tab e2 t2
+    popTemp 2
     return (def1++def2, code1 ++ code2 ++ [COND t1 relop t2 lt lf])
 transCond tab expr lt lf = do
     t <- newTemp
     (def, code) <- transExp tab expr t
     t1 <- newTemp
+    popTemp 2
     return (def, code ++ [MOVEI t1 0] ++ [COND t DIFF t1 lt lf])

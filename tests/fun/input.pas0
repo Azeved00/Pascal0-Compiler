@@ -1,8 +1,14 @@
 Program Fun;
-Function test(n: integer): Boolean;
+Function test(n: integer): integer;
 Begin
-  writeint(n)
+  test := n
 end;
+Function add(n: integer; x : integer): integer;
 Begin
-  test(5)
+  add := n + x
+end;
+var a : integer;
+Begin
+  test(5);
+  a := add(5,4)
 End.
