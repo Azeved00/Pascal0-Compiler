@@ -121,7 +121,8 @@ data Instr = MOVE Temp Temp
            | JUMP Label
            | COND Temp Op Temp Label Label
            | CONDI Temp Op Int Label Label
-           | CALL Temp Label [Temp]
+           | CALLF Temp Label [Temp]
+           | CALLP Label [Temp]
            | LOAD Temp Int Temp
            | SAVE Temp Int Temp
            | RETURN Temp

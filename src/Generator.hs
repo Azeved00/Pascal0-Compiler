@@ -159,7 +159,7 @@ transExp tab (UnOp NOT expr) dest = do
 transExp tab (Func id (CompoundExp expr)) dest = do
     ((def, code), temps) <- transExps tab expr
     popParam (length temps)
-    return (def, code ++ [CALL dest id temps])
+    return (def, code ++ [CALLF dest id temps])
 
 transExp _ exp _ = error ("Error: Cant 't parse" ++ show exp)
 
@@ -239,11 +239,9 @@ transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s t
 transStm tab blabel (BreakStm) = do return ([], [JUMP blabel])
 
 transStm tab blabel (ProcStm id (CompoundExp exps)) = do
-    te <- newTemp
     ((defE, codeE),tempE) <- transExps tab exps
-    popTemp 1
     popParam (length tempE)
-    return (defE, codeE ++ [CALL id te tempE])
+    return (defE, codeE ++ [CALLP id tempE])
 
 transStm tab blabel st = error ("Error: Can't parse statement: " ++ show st)
 -------------------------- Translate Condition ------------------------
