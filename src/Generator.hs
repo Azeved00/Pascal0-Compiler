@@ -83,7 +83,7 @@ loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
 ------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
-newTemp = do (t,l,s)<-get; put (t+1,l,s); return ("t"++show t)
+newTemp = do (t,l,s)<-get; put (t+1,l,s); return ("$t"++show t)
 
 popTemp :: Int -> State Count ()
 popTemp k =  modify (\(t,l,s) -> (t-k,l,s))
@@ -207,7 +207,7 @@ transStm tab blabel (ForStm (AssignStm (Id s) e) expr stm) = case Map.lookup s t
                        l2 <- newLabel
                        l3 <- newLabel
                        (def3, code3) <- transStm tab l3 stm
-                       return (def1++def2++def3, code1 ++ code2 ++ [LABEL l1, COND temp LESS t1 l2 l3, LABEL l2]
+                       return (def1++def2++def3, code1 ++ code2 ++ [LABEL l1, COND temp LEQUAL t1 l2 l3, LABEL l2]
                                ++ code3 ++ [OPERI PLUS temp temp 1, JUMP l1, LABEL l3])
 
 transStm tab blabel (BreakStm) = do return ([], [JUMP blabel])
@@ -243,4 +243,5 @@ transCond tab (RelOp relop e1 e2) lt lf = do
 transCond tab expr lt lf = do
     t <- newTemp
     (def, code) <- transExp tab expr t
-    return (def, code ++ [CONDI t DIFF 0 lt lf])
+    t1 <- newTemp
+    return (def, code ++ [MOVEI t1 0] ++ [COND t DIFF t1 lt lf])

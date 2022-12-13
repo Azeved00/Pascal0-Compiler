@@ -18,8 +18,8 @@ main = do
     --putStrLn $ show $ lexer
     --putStrLn $ show $ pars
     --putStrLn $ show $ typ
-    --if typ then
-    --    do putStrLn (".data:\n" ++ (show _data))
-    --       putStrLn (".text:\n" ++ (show _text))
-    --else return ()
-    putStrLn mips
+    if typ then
+        --do putStrLn (".data:\n" ++ (show _data))
+        --   putStrLn (".text:\n" ++ (show _text))
+        putStrLn mips
+    else return ()
