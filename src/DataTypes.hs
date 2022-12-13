@@ -120,7 +120,6 @@ data Instr = MOVE Temp Temp
            | LABEL Label
            | JUMP Label
            | COND Temp Op Temp Label Label
-           | CONDI Temp Op Int Label Label
            | CALLF Temp Label [Temp]
            | CALLP Label [Temp]
            | LOAD Temp Int Temp
@@ -130,4 +129,5 @@ data Instr = MOVE Temp Temp
 
 data Def = DARRAY Label Int
          | DSTRING Label String
+         | DCONST Label Int 
          deriving Show
