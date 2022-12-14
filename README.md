@@ -1,24 +1,29 @@
 
-# Trabalho Laboratorial de Compiladores
+# Trabalho Laboratorial de Compiladores - Grupo 35
 
 ## Trello Link
 https://trello.com/b/edl0xdeB
 
-## Compilador de Pascal-0
+##  Como Correr
+### Para correr um teste especifico
+`./autoTest.sh` + nome da pasta em que o teste esta
+ex.: `./autoTest.sh fib`
 
-* Descrição do trabalho no documento [trabalho.pdf](./data/trabalho.pdf)
-* Descrição do subconjunto da linguagem Pascal no documento
-  [pascal0-reference.pdf](./data/pascal0-reference.pdf)
+### Para correr todos os testes
+`./autoTest.sh`
 
-## Sugestões
 
-* Coloquem o código fonte num subdiretório  `src`.
-* Usem o `make`/`cabal` para automatizar a compilação de C ou Haskell
-  respetivamente.
-* Dispõe de um conjunto de programas de exemplo para testes no
-  subdiretório `tests`; podem ainda acrescentar mais.
+## Notas
+*  É possivel usar `*` como wild card no autoTest
+* Programa vai criar um ficheiro out.asm onde o codigo assembly vai ser colocado, caso o ficheiro ja exista os conteudos sao substituidos
 
-Bom trabalho!
-
-----
-Pedro Vasconcelos, 2022.
+## Ainda não implementado
+* funcoes com mais de 3 parametros
+* loops invertidos
+* nested functions
+* programa com mais de 7 variaveis
+* bugs se callees usarem registos de callers
+* progrmaa com mais de 9 temporarios
+* mais do que 1 array 
+* sair fora do array nao da erro ? 
+	
