@@ -1,10 +1,3 @@
----
-title: Compiladores &mdash; Trabalho Laboratorial
-author: Pedro Vasconcelos, DCC/FCUP
-date: Setembro 2022
-papersize: a4
-...
-
 # Descrição geral
 
 Prentende-se que implementem um compilador básico para um subconjunto
@@ -43,8 +36,6 @@ Será mais valorizada a qualidade do que a quantidade!
 * *Arrays* de inteiros e booleanos
 * Verificação de erros de tipos
 
-\pagebreak
-
 # Recomendações
 
 * O trabalho deve ser realizado em grupos de dois estudantes
@@ -71,13 +62,13 @@ Será mais valorizada a qualidade do que a quantidade!
 
 Análise lexical e sintática
 
-:   (Apresentação na semana de 7 novembro).  Nesta fase o compilador deve apenas
+* (Apresentação na semana de 7 novembro).  Nesta fase o compilador deve apenas
     ler o código de um programa Pascal-0 e imprimir a AST (se estiver sintáticamente
     correto) ou terminar com erro.
    
 Geração de código
 
-:   (Apresentação na semana de 12 dezembro.)  O compilador
+* (Apresentação na semana de 12 dezembro.)  O compilador
 	deve aceitar programas válidos e gerar código *assembly* usando
 	código intermédio de 3 endereços. Para testar pode usar algum dos
 	simuladores de MIPS (ver as referências).
