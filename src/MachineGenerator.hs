@@ -35,7 +35,7 @@ genMachineCode (defs,instrs) =
 genData :: [Def] -> String
 genData [] = ""
 genData ((DARRAY label size):xs) = 
-    "    " ++ (label) ++ ": .space " ++ (show size) ++ "\n" ++ (genData xs)
+    "    " ++ (label) ++ ": .space " ++ (show (size*4)) ++ "\n" ++ (genData xs)
 genData ((DSTRING label str):xs) = 
     "    " ++ (label) ++ ": .asciiz " ++ ( "\""++ (takeThings str) ++ "\"")++ " \n" ++ (genData xs) 
 
@@ -98,6 +98,8 @@ genInstr ((JUMP l):xs)      = (writeInstr "j" [l]) ++ (genInstr xs)
 genInstr ((MOVE t1 t2):xs)  = (writeInstr "move"  [t1,t2]) ++ (genInstr xs)
 genInstr ((MOVEI t1 i):xs)  = (writeInstr "li" [t1,show i]) ++ (genInstr xs)
 genInstr ((MOVES t1 i):xs)  = (writeInstr "la" [t1,i]) ++ (genInstr xs)
+genInstr ((SAVE dest i src):xs)      = (writeInstr "sw" [dest,(show i)++"("++ src ++")"]) ++ (genInstr xs)
+genInstr ((LOAD src i dest):xs)      = (writeInstr "lw" [dest,(show i)++"("++ src ++")"]) ++ (genInstr xs)
 
 genInstr ((OPER PLUS dest t1 t2):xs) = (writeInstr "add" [dest,t1,t2]) ++ (genInstr xs)
 genInstr ((OPERI PLUS dest t1 i):xs) = (writeInstr "addi" [dest,t1,show i]) ++ (genInstr xs)

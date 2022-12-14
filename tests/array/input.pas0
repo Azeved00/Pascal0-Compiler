@@ -6,5 +6,5 @@ var
 begin
    fib[0] := 5;
    writestr('Number: ');
-   writeint(n)
+   writeint(fib[0])
 end.
