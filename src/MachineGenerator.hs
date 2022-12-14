@@ -101,6 +101,8 @@ genInstr ((MOVES t1 i):xs)  = (writeInstr "la" [t1,i]) ++ (genInstr xs)
 genInstr ((SAVE dest i src):xs)      = (writeInstr "sw" [dest,(show i)++"("++ src ++")"]) ++ (genInstr xs)
 genInstr ((LOAD src i dest):xs)      = (writeInstr "lw" [dest,(show i)++"("++ src ++")"]) ++ (genInstr xs)
 
+genInstr ((OPER OR dest t1 t2):xs) = (writeInstr "or" [dest,t1,t2]) ++ (genInstr xs)
+genInstr ((OPER AND dest t1 t2):xs) = (writeInstr "and" [dest,t1,t2]) ++ (genInstr xs)
 genInstr ((OPER PLUS dest t1 t2):xs) = (writeInstr "add" [dest,t1,t2]) ++ (genInstr xs)
 genInstr ((OPERI PLUS dest t1 i):xs) = (writeInstr "addi" [dest,t1,show i]) ++ (genInstr xs)
 genInstr ((OPER MINUS dest t1 t2):xs) = (writeInstr "sub" [dest,t1,t2]) ++ (genInstr xs)
@@ -108,7 +110,7 @@ genInstr ((OPER MULT dest t1 t2):xs) = (writeInstr "mul" [dest,t1,t2]) ++ (genIn
 genInstr ((OPER DIV dest t1 t2):xs) = (writeInstr "div" [dest,t1,t2]) ++ (genInstr xs)
 genInstr ((OPER MOD dest t1 t2):xs) = 
     (writeInstr "div" [t1,t2]) ++ 
-    (writeInstr "mdhi" [dest]) ++ (genInstr xs)
+    (writeInstr "mfhi" [dest]) ++ (genInstr xs)
 
 -----------------CONDITIONS------------------------
 genInstr ((COND t1 EQUAL t2 lt lf):(LABEL l1):xs) 
