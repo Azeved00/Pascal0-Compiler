@@ -8,7 +8,8 @@ import qualified Data.Map as Map
 
 
 generate :: Prog -> ICode
-generate p =  evalState (genInstr p) (0,0,0,3,0)
+generate p =  evalState (genInstr p) (0,0,0,0,0)
+
 
 type Count = (Int,Int,Int,Int,Int)
 type Table = Map Id Temp
@@ -62,12 +63,6 @@ loadParams t ((id,_):xs) = do
     ntab <- loadParams (Map.insert id temp t) xs
     return (ntab)
 
-loadReturn :: Table -> Id -> State Count Table
-loadReturn tab id = do
-    ret <- newParam
-    ntab <- transform (Map.insert id ret tab)
-    return (ntab)
-
 transform :: Table -> State Count Table
 transform t = return (t)
 
@@ -82,13 +77,13 @@ loadProcs tab (((Procedure l params),(vrs,stms)):xs) const = do
     return (def1++def2++def3, [LABEL l] ++ stcode ++ other)
 
 loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
-    ntab0   <- loadReturn tab id
+    ntab0   <- transform (Map.insert id "$v0" tab)
     ntab1   <- loadParams ntab0 params
     (ntab2, def1)   <- loadVars ntab1 vrs const
-    popParam (length ntab1)
+    popParam ((length ntab1) - 1)
     (def2, fcode)   <- transStm ntab2 id stms
     (def3, other)   <- loadProcs tab xs const
-    return (def1++def2++def3, [LABEL id] ++ fcode ++[RETURN "$s0"] ++ other)
+    return (def1++def2++def3, [LABEL id] ++ fcode ++[RETURN "$v0"] ++ other)
 ------------------------auxiliar functions---------------------------------
 
 newTemp :: State Count Temp
@@ -107,7 +102,7 @@ newVar :: State Count Temp
 newVar = do (t,l,str,s,p)<-get; put (t,l,str,s+1,p); return ("$s"++show s)
 
 newParam :: State Count Temp
-newParam = do (t,l,str,s,p)<-get; put (t,l,str,s,p+1); return ("$s"++show p)
+newParam = do (t,l,str,s,p)<-get; put (t,l,str,s,p+1); return ("$a"++show p)
 
 popParam :: Int -> State Count ()
 popParam k =  modify (\(t,l,str,s,p) -> (t,l,str,s,p-k))

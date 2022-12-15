@@ -14,13 +14,12 @@ takeThings a = init (tail a)
 
 saveS ::String
 saveS = 
-    (writeInstr "la" ["$v0"])++
-    concat [writeInstr "sw" ["$s"++show a , (show (a*4)) ++"($v0)"] |  a <- [0..7]]
-
-
+    concat [writeInstr "sw" ["$s"++show a , (show (a*4)) ++"($v0)"] |  a <- [0..7]] ++
+	writeInstr "add" ["$sp",show (7*4)]
+	
 getS :: String
 getS  = 
-    (writeInstr "la" ["$v0"])++
+    (writeInstr "sub" ["$sp",show (7*4)])++
     concat [writeInstr "lw" ["$s"++show a , (show (a*4)) ++ "($v0)"] |  a <- [0..7]]
 -----------------------------Geracao de codigo maquina--------------------------------
 genMachineCode :: ICode -> String
@@ -86,7 +85,7 @@ genInstr ((CALLF dest id _):xs) =
     (genInstr xs)
 
 genInstr ((RETURN v):xs) = 
-    (writeInstr "move" ["$v0",v]) ++
+--    (writeInstr "move" ["$v0",v]) ++
     (writeInstr "jr" ["$ra"]) ++
     (genInstr xs)
 ----------------------BASIC JUMPS-------------------

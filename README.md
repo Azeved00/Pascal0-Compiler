@@ -18,7 +18,7 @@ ex.: `./autoTest.sh fib`
 * Programa vai criar um ficheiro out.asm onde o codigo assembly vai ser colocado, caso o ficheiro ja exista os conteudos sao substituidos
 
 ## Ainda não implementado
-* funcoes com mais de 3 parametros
+* funcoes com mais de 4 parametros
 * loops invertidos
 * nested functions
 * programa com mais de 7 variaveis
