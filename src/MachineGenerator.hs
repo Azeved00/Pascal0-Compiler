@@ -28,7 +28,6 @@ genMachineCode (defs,instrs) =
     (writeLine False ".data")++
     (genData defs) ++ 
     (writeLine False ".text")++
-    (writeInstr "j" ["Main"])++
     (genInstr instrs)
 
 ----------------GENERATE DATA------------------------
@@ -113,36 +112,41 @@ genInstr ((OPER MOD dest t1 t2):xs) =
     (writeInstr "mfhi" [dest]) ++ (genInstr xs)
 
 -----------------CONDITIONS------------------------
-genInstr ((COND t1 EQUAL t2 lt lf):(LABEL l1):xs) 
+genInstr ((COND t1 EQUAL t2 lt lf):(LABEL l1):xs)  
     | l1 == lt = (writeInstr "bne" [t1,t2,lf]) ++ cont
     | l1 == lf = (writeInstr "beq" [t1,t2,lt]) ++ cont
     | otherwise = error ("Error : Condition has no where to go")
-    where cont = genInstr xs
+    where cont = genInstr (LABEL l1:xs)
 genInstr ((COND t1 DIFF t2 lt lf):(LABEL l1):xs)
     | l1 == lt = (writeInstr "beq" [t1,t2,lf]) ++ cont
     | l1 == lf = (writeInstr "bne" [t1,t2,lt]) ++ cont
     | otherwise = error ("Error : Condition has no where to go")
-    where cont = genInstr xs
+    --where cont = genInstrs
+    where cont = genInstr (LABEL l1:xs)
 genInstr ((COND t1 GREAT t2 lt lf):(LABEL l1):xs)
     | l1 == lt = (writeInstr "ble" [t1,t2,lf]) ++ cont
     | l1 == lf = (writeInstr "bgt" [t1,t2,lt]) ++ cont
     | otherwise = error ("Error : Condition has no where to go")
-    where cont = genInstr xs
+    --where cont = genInstr xs
+    where cont = genInstr (LABEL l1:xs)
 genInstr ((COND t1 GEQUAL t2 lt lf):(LABEL l1):xs) 
     | l1 == lt = (writeInstr "blt" [t1,t2,lf]) ++ cont
     | l1 == lf = (writeInstr "bge" [t1,t2,lt]) ++ cont
     | otherwise = error ("Error : Condition has no where to go")
-    where cont = genInstr xs
+   -- where cont = genInstr xs
+    where cont = genInstr (LABEL l1:xs)
 genInstr ((COND t1 LESS t2 lt lf):(LABEL l1):xs) 
     | l1 == lt = (writeInstr "bge" [t1,t2,lf]) ++ cont
     | l1 == lf = (writeInstr "blt" [t1,t2,lt]) ++ cont
     | otherwise = error ("Error : Condition has no where to go")
-    where cont = genInstr xs
+    --where cont = genInstr xs
+    where cont = genInstr (LABEL l1:xs)
 genInstr ((COND t1 LEQUAL t2 lt lf):(LABEL l1):xs)
     | l1 == lt = (writeInstr "bgt" [t1,t2,lf]) ++ cont
     | l1 == lf = (writeInstr "ble" [t1,t2,lt]) ++ cont
     | otherwise = error ("Error : Condition has no where to go")
-    where cont = genInstr xs
+    --where cont = genInstr xs
+    where cont = genInstr (LABEL l1:xs)
 
 genInstr (x:xs) = (writeLine True (show x)) ++ (genInstr xs)  
 --error ("Error: Can't parse Instruction -> " ++ show i)

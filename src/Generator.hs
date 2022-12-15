@@ -19,7 +19,7 @@ genInstr (Program _ (Body const procs vars prog)) = do
     (def1, procs) <- loadProcs t1 procs const
     (t2, def2) <- loadVars t1 vars const
     (def3, list) <- transStm t2 "" prog
-    return (def1++def2++def3,consts ++ procs ++ [LABEL "Main"]++list)
+    return (def1++def2++def3,consts ++ [JUMP "Main"] ++ procs ++ [LABEL "Main"] ++ list)
 
 myconcat :: [ICode] -> ICode
 myconcat [] = ([],[])
@@ -77,7 +77,6 @@ loadProcs tab (((Procedure l params),(vrs,stms)):xs) const = do
     ntab1   <- loadParams tab params
     (ntab2, def1)   <- loadVars ntab1 vrs const
     popParam (length ntab1)
-    endl    <- newLabel
     (def2, stcode)  <- transStm ntab2 l stms
     (def3, other)   <- loadProcs tab xs const
     return (def1++def2++def3, [LABEL l] ++ stcode ++ other)
@@ -87,8 +86,7 @@ loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
     ntab1   <- loadParams ntab0 params
     (ntab2, def1)   <- loadVars ntab1 vrs const
     popParam (length ntab1)
-    endl    <- newLabel
-    (def2, fcode)   <- transStm ntab2 endl stms
+    (def2, fcode)   <- transStm ntab2 id stms
     (def3, other)   <- loadProcs tab xs const
     return (def1++def2++def3, [LABEL id] ++ fcode ++[RETURN "$s0"] ++ other)
 ------------------------auxiliar functions---------------------------------
@@ -220,7 +218,7 @@ transStm tab blabel (WhileStm expr stm) =do
     l1 <- newLabel
     l2 <- newLabel
     l3 <- newLabel
-    (def1, code1) <- transStm tab l3 stm
+    (def1, code1) <- transStm tab l2 stm
     (def2, code2) <- transCond tab expr l1 l2
     return (def1++def2, [JUMP l3, LABEL l1] ++ code1 ++ [LABEL l3] ++ code2
                                ++ [LABEL l2])
