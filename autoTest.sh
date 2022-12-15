@@ -70,7 +70,7 @@ for testFolder in $rootFolder/tests/$par; do
     then cat $testFolder/input.pas0 | cabal run -v0 | diff - $testFile/output.txt
     else
         res=$(cat $testFolder/input.pas0 | cabal run -v0)
-        echo "$res" > ./out.asm
+        echo "$res" > $testFolder/out.asm
         draw "$res"
     fi
 done
