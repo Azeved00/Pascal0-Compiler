@@ -77,10 +77,10 @@ loadProcs tab (((Procedure l params),(vrs,stms)):xs) const = do
     return (def1++def2++def3, [LABEL l] ++ stcode ++ other)
 
 loadProcs tab (((Function id params tpe),(vrs,stms)):xs) const= do
-    ntab0   <- transform (Map.insert id "$v0" tab)
-    ntab1   <- loadParams ntab0 params
+    ntab0   <- loadParams tab params
+    ntab1   <- transform (Map.insert id "$v0" ntab0)
     (ntab2, def1)   <- loadVars ntab1 vrs const
-    popParam ((length ntab1) - 1)
+    popParam (length ntab0)
     (def2, fcode)   <- transStm ntab2 id stms
     (def3, other)   <- loadProcs tab xs const
     return (def1++def2++def3, [LABEL id] ++ fcode ++[RETURN "$v0"] ++ other)
@@ -150,10 +150,7 @@ transExp tab (UnOp NOT expr) dest = do
     return (def, [MOVEI dest 0] ++ code ++ [LABEL l1, MOVEI dest 1] ++ [LABEL l2])
 
 transExp tab (Func id (CompoundExp expr)) dest = do
-    temp <- newParam
-    ntab0 <- transform(Map.insert id temp tab)
-    ((def, code), temps) <- transExps ntab0 expr
-    popParam (length temps)
+    ((def, code), temps) <- transExps tab expr
     return (def, code ++ [CALLF dest id temps])
 
 transExp _ exp _ = error ("Error: Cant 't parse" ++ show exp)

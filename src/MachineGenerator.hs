@@ -43,17 +43,17 @@ genInstr :: [Instr] -> String
 genInstr [] = ""
 
 ---------------------OPTIMIZATIONS--------------------
-genInstr((MOVE t1 t2):(MOVE t3 t4):xs)
-    | t1 == t4  = (writeInstr "move" [t3,t2]) ++ genInstr xs
-    | otherwise = (writeInstr "move" [t1,t2]) ++ genInstr ((MOVE t3 t4) : xs)
+--genInstr((MOVE t1 t2):(MOVE t3 t4):xs)
+--    | t1 == t4  = (writeInstr "move" [t3,t2]) ++ genInstr xs
+--    | otherwise = (writeInstr "move" [t1,t2]) ++ genInstr ((MOVE t3 t4) : xs)
 
-genInstr((MOVES t1 t2):(MOVE t3 t4):xs)
-    | t1 == t4  = (writeInstr "la" [t3,t2]) ++ genInstr xs
-    | otherwise = (writeInstr "la" [t1,t2]) ++ genInstr ((MOVE t3 t4) : xs)
+--genInstr((MOVES t1 t2):(MOVE t3 t4):xs)
+--    | t1 == t4  = (writeInstr "la" [t3,t2]) ++ genInstr xs
+--    | otherwise = (writeInstr "la" [t1,t2]) ++ genInstr ((MOVE t3 t4) : xs)
 
-genInstr((MOVEI t1 i):(MOVE t3 t4):xs)
-    | t1 == t4  = (writeInstr "li" [t3,show i]) ++ genInstr xs
-    | otherwise = (writeInstr "li" [t1,show i]) ++ genInstr ((MOVE t3 t4) : xs)
+--genInstr((MOVEI t1 i):(MOVE t3 t4):xs)
+--    | t1 == t4  = (writeInstr "li" [t3,show i]) ++ genInstr xs
+--    | otherwise = (writeInstr "li" [t1,show i]) ++ genInstr ((MOVE t3 t4) : xs)
 
 --------------------SPECIFIC FUNCTIONS-----------------
 genInstr ((CALLP "writeint" [i]):xs) = 
